@@ -1,0 +1,11 @@
+[package]
+name = "ci"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dagger-sdk = "0.3.0"
+eyre = "0.6.8"
+tokio = "1.32.0"
