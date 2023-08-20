@@ -7,7 +7,7 @@ async fn main() -> eyre::Result<()> {
     let host_source_dir = client.host().directory_opts(
         ".",
         HostDirectoryOpts {
-            exclude: Some(vec!["target".into()]),
+            exclude: Some(vec!["target"]),
             include: None,
         },
     );
@@ -17,13 +17,24 @@ async fn main() -> eyre::Result<()> {
         .from("rust:1.71.1")
         .with_mounted_directory("/src", host_source_dir.id().await?);
 
-    let check = container
+    container
         .with_workdir("/src")
         .with_exec(vec!["cargo", "check"])
         .stdout()
         .await?;
 
-    println!("Hello from Dagger and {}", check.trim());
+    container
+        .with_workdir("/src")
+        .with_exec(vec!["cargo", "test"])
+        .stdout()
+        .await?;
 
+    container
+        .with_workdir("/src")
+        .with_exec(vec!["cargo", "build", "-p", "sample"])
+        .stdout()
+        .await?;
+
+    println!("Everything is A-Ok!");
     Ok(())
 }
