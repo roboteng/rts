@@ -12,10 +12,13 @@ async fn main() -> eyre::Result<()> {
         },
     );
 
+    let cache = client.cache_volume("deps").id().await?;
+
     let container = client
         .container()
         .from("rust:1.71.1")
-        .with_mounted_directory("/src", host_source_dir.id().await?);
+        .with_mounted_directory("/src", host_source_dir.id().await?)
+        .with_mounted_cache("/target", cache);
 
     container
         .with_workdir("/src")
@@ -23,13 +26,20 @@ async fn main() -> eyre::Result<()> {
         .stdout()
         .await?;
 
-    container
+    let runner = container
         .with_workdir("/src")
-        .with_exec(vec!["cargo", "test"])
-        .stdout()
-        .await?;
+        .with_exec(vec!["cargo", "test"]);
 
-    container
+    let runner =
+        runner
+            .with_workdir("/src")
+            .with_exec(vec!["rustup", "component", "add", "clippy"]);
+
+    let runner = runner
+        .with_workdir("/src")
+        .with_exec(vec!["cargo", "clippy"]);
+
+    runner
         .with_workdir("/src")
         .with_exec(vec!["cargo", "build", "-p", "sample"])
         .stdout()
