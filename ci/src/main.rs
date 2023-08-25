@@ -1,4 +1,4 @@
-use dagger_sdk::HostDirectoryOpts;
+use dagger_sdk::{CacheSharingMode, ContainerWithMountedCacheOpts, DirectoryId, HostDirectoryOpts};
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
@@ -20,26 +20,28 @@ async fn main() -> eyre::Result<()> {
         .with_mounted_directory("/src", host_source_dir.id().await?)
         .with_mounted_cache("/target", cache);
 
-    container
+    let container = container
         .with_workdir("/src")
-        .with_exec(vec!["cargo", "check"])
-        .stdout()
-        .await?;
+        .with_exec(vec!["cargo", "fetch"]);
 
-    let runner = container
+    let container = container
+        .with_workdir("/src")
+        .with_exec(vec!["cargo", "check"]);
+
+    let container = container
         .with_workdir("/src")
         .with_exec(vec!["cargo", "test"]);
 
-    let runner =
-        runner
+    let container =
+        container
             .with_workdir("/src")
             .with_exec(vec!["rustup", "component", "add", "clippy"]);
 
-    let runner = runner
+    let container = container
         .with_workdir("/src")
         .with_exec(vec!["cargo", "clippy"]);
 
-    runner
+    container
         .with_workdir("/src")
         .with_exec(vec!["cargo", "build", "-p", "sample"])
         .stdout()
