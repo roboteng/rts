@@ -1,4 +1,4 @@
-use dagger_sdk::{CacheSharingMode, ContainerWithMountedCacheOpts, DirectoryId, HostDirectoryOpts};
+use dagger_sdk::HostDirectoryOpts;
 
 const PROJECT: &str = "/project";
 const PROJECT_TARGET: &str = "/project/target";
@@ -16,7 +16,8 @@ async fn main() -> eyre::Result<()> {
     );
 
     let build_cache = client.cache_volume("target").id().await?;
-    let cargo_cache = client.cache_volume("cargo").id().await?;
+    let cargo_registry = client.cache_volume("cargo").id().await?;
+    let cargo_bin_registry = client.cache_volume("global bin").id().await?;
 
     let container = client
         .container()
@@ -26,9 +27,8 @@ async fn main() -> eyre::Result<()> {
 
     let cargo_home = container.env_variable("CARGO_HOME").await?;
 
-    println!("Cargo home: {cargo_home}");
-
-    let container = container.with_mounted_cache(&format!("{cargo_home}/registry"), cargo_cache);
+    let container = container.with_mounted_cache(format!("{cargo_home}/registry"), cargo_registry);
+    let container = container.with_mounted_cache(format!("{cargo_home}/bin"), cargo_bin_registry);
 
     let container = container
         .with_workdir(PROJECT)
@@ -45,14 +45,13 @@ async fn main() -> eyre::Result<()> {
 
     let container = container
         .with_workdir(PROJECT)
-        .with_exec(vec!["cargo", "clippy"]);
+        .with_exec(vec!["cargo", "clippy", "--all", "--", "-D", "warnings"]);
 
     container
         .with_workdir(PROJECT)
         .with_exec(vec!["cargo", "build", "-p", "sample"])
-        .stdout()
+        .stderr()
         .await?;
 
-    println!("Everything is A-Ok!");
     Ok(())
 }
