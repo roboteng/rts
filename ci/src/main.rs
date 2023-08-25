@@ -17,7 +17,6 @@ async fn main() -> eyre::Result<()> {
 
     let build_cache = client.cache_volume("target").id().await?;
     let cargo_registry = client.cache_volume("cargo").id().await?;
-    let cargo_bin_registry = client.cache_volume("global bin").id().await?;
 
     let container = client
         .container()
@@ -27,28 +26,13 @@ async fn main() -> eyre::Result<()> {
 
     let cargo_home = container.env_variable("CARGO_HOME").await?;
 
-    let container = container.with_mounted_cache(format!("{cargo_home}/registry"), cargo_registry);
-    let container = container.with_mounted_cache(format!("{cargo_home}/bin"), cargo_bin_registry);
-
-    let container = container
-        .with_workdir(PROJECT)
-        .with_exec(vec!["cargo", "check"]);
-
-    let container = container
-        .with_workdir(PROJECT)
-        .with_exec(vec!["cargo", "test"]);
-
-    let container =
-        container
-            .with_workdir(PROJECT)
-            .with_exec(vec!["rustup", "component", "add", "clippy"]);
-
-    let container = container
-        .with_workdir(PROJECT)
-        .with_exec(vec!["cargo", "clippy", "--all", "--", "-D", "warnings"]);
-
     container
+        .with_mounted_cache(format!("{cargo_home}/registry"), cargo_registry)
         .with_workdir(PROJECT)
+        .with_exec(vec!["cargo", "check"])
+        .with_exec(vec!["cargo", "test"])
+        .with_exec(vec!["rustup", "component", "add", "clippy"])
+        .with_exec(vec!["cargo", "clippy", "--all", "--", "-D", "warnings"])
         .with_exec(vec!["cargo", "build", "-p", "sample"])
         .stderr()
         .await?;
