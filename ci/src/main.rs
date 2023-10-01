@@ -10,7 +10,7 @@ async fn main() -> eyre::Result<()> {
     let host_source_dir = client.host().directory_opts(
         ".",
         HostDirectoryOpts {
-            exclude: Some(vec!["target"]),
+            exclude: Some(vec!["target", ".obsidian"]),
             include: None,
         },
     );
@@ -33,7 +33,6 @@ async fn main() -> eyre::Result<()> {
         .with_exec(vec!["cargo", "test"])
         .with_exec(vec!["rustup", "component", "add", "clippy"])
         .with_exec(vec!["cargo", "clippy", "--all", "--", "-D", "warnings"])
-        .with_exec(vec!["cargo", "build", "-p", "sample"])
         .stderr()
         .await?;
 

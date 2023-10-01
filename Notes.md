@@ -1,4 +1,6 @@
-### Game Menu flow chart
+# Game Design Choices
+
+## Game Menu flow chart
 
 ```mermaid
 flowchart TD
@@ -32,3 +34,53 @@ Single player can either just be multiplayer in disguise (two game loops), or ac
 - Self hosted game
 	- People can start their own servers, and invite their friends to join their specific game.
 	- This seems like the simplest way to start as an MVP
+
+## Multiplayer flow
+
+Starting off, I see one spot to make a choice for game settings, like number of players or map
+
+- First player to join
+	- Whoever is the first to join a game would be the one who has special power to change settings
+- Server sets options
+	- This would require a headed UI, or passing in command line arguments
+	- This seems like a worse option, as all players will need to set some game options anyways
+
+### Terms
+
+Server
+- The center of the game, what all the Clients connect to, runs AI
+- The Server has 0 or 1 Hosts. Guests can only connect if a Host is connected
+
+Client
+- The program that connects to the Server
+
+Player
+- A human that is controlling a Client
+
+Host
+- The first Client that connects to the Server. This is only used for setting up the game, once a game is in progress, the distinction between Host and Guest is gone
+
+Guest
+- A player that can only change their own settings
+
+### Flow
+
+1. Server starts
+2. Host joins
+3. Host can mess with options
+4. Any number of Guests join
+5. The Host and Guests tell the Server when they have updated their options
+6. Once the Host determines the game is ready to start, the ask the Server to start the game
+
+### Requirements
+
+Given the server is running
+When Alice joins
+Then Alice is the Host
+And Alice is able to change the numbers of players to 3
+
+Given the server is running
+And Alice has connected
+When Bob joins
+Then Bob is a Guest
+And Bob is not be able to change the number  of players to 3
