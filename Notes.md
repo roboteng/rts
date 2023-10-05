@@ -45,6 +45,10 @@ Starting off, I see one spot to make a choice for game settings, like number of 
 	- This would require a headed UI, or passing in command line arguments
 	- This seems like a worse option, as all players will need to set some game options anyways
 
+### Choice
+
+Does the server that manages players join the same one that runs the game, or does it send players to seperate server?
+
 ### Terms
 
 Server
