@@ -78,13 +78,15 @@ Guest
 
 ### Requirements
 
-Given the server is running
-When Alice joins
-Then Alice is the Host
-And Alice is able to change the numbers of players to 3
+- Given the server is running
+- When Alice joins
+- Then Alice is the Host
+- And Alice is able to change the numbers of players to 3
 
-Given the server is running
-And Alice has connected
-When Bob joins
-Then Bob is a Guest
-And Bob is not be able to change the number  of players to 3
+---
+
+- Given the server is running
+- And Alice has connected
+- When Bob joins
+- Then Bob is a Guest
+- And Bob is not be able to change the number  of players to 3
