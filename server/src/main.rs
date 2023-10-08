@@ -1,19 +1,17 @@
-use std::{
-    collections::VecDeque,
-    sync::mpsc::{channel, Receiver, Sender, TryRecvError},
-};
+use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 
 fn main() {
     println!("Hello, world!");
 }
 
+#[derive(Default)]
 pub struct Server {
     connection: Option<Connection>,
 }
 
 impl Server {
     pub fn new() -> Self {
-        Self { connection: None }
+        Default::default()
     }
 
     pub fn add(&mut self, conn: Connection) {
@@ -34,6 +32,7 @@ impl Server {
     }
 }
 
+#[allow(unused)]
 fn two_way_channe() -> (Connection, ClientConnection) {
     let (request_tx, reqest_rx) = channel();
     let (reply_tx, reply_rx) = channel();
@@ -49,6 +48,7 @@ fn two_way_channe() -> (Connection, ClientConnection) {
     )
 }
 
+#[allow(unused)]
 pub struct ClientConnection {
     tx: Sender<ServerRequest>,
     reply_rx: Receiver<Message>,
