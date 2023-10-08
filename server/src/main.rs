@@ -34,6 +34,21 @@ impl Server {
     }
 }
 
+fn two_way_channe() -> (Connection, ClientConnection) {
+    let (request_tx, reqest_rx) = channel();
+    let (reply_tx, reply_rx) = channel();
+    (
+        Connection {
+            reply_tx,
+            reqest_rx,
+        },
+        ClientConnection {
+            reply_rx,
+            tx: request_tx,
+        },
+    )
+}
+
 pub struct ClientConnection {
     tx: Sender<ServerRequest>,
     reply_rx: Receiver<Message>,
@@ -42,24 +57,6 @@ pub struct ClientConnection {
 pub struct Connection {
     reqest_rx: Receiver<ServerRequest>,
     reply_tx: Sender<Message>,
-}
-
-impl Connection {
-    pub fn new() -> (Self, ClientConnection) {
-        let (request_tx, reqest_rx) = channel();
-        let (reply_tx, reply_rx) = channel();
-
-        (
-            Self {
-                reply_tx,
-                reqest_rx,
-            },
-            ClientConnection {
-                reply_rx,
-                tx: request_tx,
-            },
-        )
-    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -83,7 +80,7 @@ mod test {
     /// Then Alice is the Host
     fn host_joins() {
         let mut server = Server::new();
-        let (conn, reply) = Connection::new();
+        let (conn, reply) = two_way_channe();
 
         server.add(conn);
         let response = reply.reply_rx.recv().unwrap();
@@ -99,7 +96,7 @@ mod test {
     /// Then Alice is able to change the numbers of players to 3
     fn host_changes_number_of_players() {
         let mut server = Server::new();
-        let (conn, reply) = Connection::new();
+        let (conn, reply) = two_way_channe();
         server.add(conn);
         let _ = reply.reply_rx.recv().unwrap();
 
