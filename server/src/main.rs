@@ -1,4 +1,7 @@
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::{
+    collections::VecDeque,
+    sync::mpsc::{channel, Receiver, Sender, TryRecvError},
+};
 
 fn main() {
     println!("Hello, world!");
@@ -18,10 +21,16 @@ impl Server {
         self.connection = Some(conn);
     }
 
-    fn tick(&mut self) {
-        self.connection
-            .as_mut()
-            .map(|s| s.reply_tx.send(Message::ChangePlayers(3)).unwrap());
+    pub fn tick(&mut self) {
+        if let Some(r) = &self.connection {
+            match r.reqest_rx.try_recv() {
+                Ok(ServerRequest::ChangePlayers(n)) => {
+                    r.reply_tx.send(Message::ChangePlayers(n)).unwrap();
+                }
+                Err(TryRecvError::Empty) => {}
+                Err(TryRecvError::Disconnected) => self.connection = None,
+            };
+        }
     }
 }
 
@@ -34,6 +43,7 @@ pub struct Connection {
     reqest_rx: Receiver<ServerRequest>,
     reply_tx: Sender<Message>,
 }
+
 impl Connection {
     pub fn new() -> (Self, ClientConnection) {
         let (request_tx, reqest_rx) = channel();
@@ -58,6 +68,7 @@ pub enum Message {
     ChangePlayers(u8),
 }
 
+#[derive(Debug)]
 pub enum ServerRequest {
     ChangePlayers(u8),
 }
@@ -76,6 +87,7 @@ mod test {
 
         server.add(conn);
         let response = reply.reply_rx.recv().unwrap();
+        server.tick();
 
         assert_eq!(response, Message::JoinedAsHost);
     }
@@ -94,7 +106,7 @@ mod test {
         reply.tx.send(ServerRequest::ChangePlayers(3)).unwrap();
         server.tick();
 
-        let response = reply.reply_rx.recv().unwrap();
+        let response = reply.reply_rx.try_recv().unwrap();
         assert_eq!(response, Message::ChangePlayers(3));
     }
 }
