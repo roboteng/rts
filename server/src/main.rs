@@ -6,7 +6,7 @@ fn main() {
 
 #[derive(Default)]
 pub struct Server {
-    connection: Option<Connection>,
+    connection: Vec<Connection>,
 }
 
 impl Server {
@@ -15,18 +15,23 @@ impl Server {
     }
 
     pub fn add(&mut self, conn: Connection) {
-        conn.reply_tx.send(Message::JoinedAsHost).unwrap();
-        self.connection = Some(conn);
+        let message = if self.connection.is_empty() {
+            Message::JoinedAsHost
+        } else {
+            Message::JoinedAsGuest
+        };
+        conn.reply_tx.send(message).unwrap();
+        self.connection.push(conn);
     }
 
     pub fn tick(&mut self) {
-        if let Some(r) = &self.connection {
+        for r in &self.connection {
             match r.reqest_rx.try_recv() {
                 Ok(ServerRequest::ChangePlayers(n)) => {
                     r.reply_tx.send(Message::ChangePlayers(n)).unwrap();
                 }
                 Err(TryRecvError::Empty) => {}
-                Err(TryRecvError::Disconnected) => self.connection = None,
+                Err(TryRecvError::Disconnected) => {}
             };
         }
     }
@@ -62,6 +67,7 @@ pub struct Connection {
 #[derive(Debug, PartialEq, Eq)]
 pub enum Message {
     JoinedAsHost,
+    JoinedAsGuest,
     ChangePlayers(u8),
 }
 
@@ -105,5 +111,27 @@ mod test {
 
         let response = reply.reply_rx.try_recv().unwrap();
         assert_eq!(response, Message::ChangePlayers(3));
+    }
+
+    #[test]
+    /// Given the server is running
+    /// And Alice is the Host
+    /// When Bob joins
+    /// Then Bob is a Guest
+    fn guest_joins() {
+        let mut server = Server::new();
+        let (alice, reply) = two_way_channe();
+
+        server.add(alice);
+        while let Ok(_) = reply.reply_rx.try_recv() {
+            server.tick();
+        }
+
+        let (bob, bob_reply) = two_way_channe();
+        server.add(bob);
+
+        let res = bob_reply.reply_rx.try_recv();
+
+        assert_eq!(res, Ok(Message::JoinedAsGuest))
     }
 }
