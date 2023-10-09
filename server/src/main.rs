@@ -25,13 +25,19 @@ impl Server {
     }
 
     pub fn tick(&mut self) {
-        for r in &self.connection {
-            match r.reqest_rx.try_recv() {
-                Ok(ServerRequest::ChangePlayers(n)) => {
+        let mut messages = Vec::new();
+        for (index, r) in self.connection.iter().enumerate() {
+            while let Ok(message) = r.reqest_rx.try_recv() {
+                messages.push((index, message));
+            }
+        }
+
+        for (index, message) in messages.into_iter() {
+            let r = &mut self.connection[index];
+            match message {
+                ServerRequest::ChangePlayers(n) => {
                     r.reply_tx.send(Message::ChangePlayers(n)).unwrap();
                 }
-                Err(TryRecvError::Empty) => {}
-                Err(TryRecvError::Disconnected) => {}
             };
         }
     }
