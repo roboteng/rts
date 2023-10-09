@@ -1,4 +1,4 @@
-use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 fn main() {
     println!("Hello, world!");
@@ -103,8 +103,8 @@ mod test {
         let (conn, reply) = two_way_channe();
 
         server.add(conn);
-        let response = reply.reply_rx.recv().unwrap();
         server.tick();
+        let response = reply.reply_rx.recv().unwrap();
 
         assert_eq!(response, Message::JoinedAsHost);
     }
@@ -134,15 +134,14 @@ mod test {
     /// Then Bob is a Guest
     fn guest_joins() {
         let mut server = Server::new();
-        let (alice, reply) = two_way_channe();
+        let (alice, _reply) = two_way_channe();
 
         server.add(alice);
-        while let Ok(_) = reply.reply_rx.try_recv() {
-            server.tick();
-        }
+        server.tick();
 
         let (bob, bob_reply) = two_way_channe();
         server.add(bob);
+        server.tick();
 
         let res = bob_reply.reply_rx.try_recv();
 
