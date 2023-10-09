@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings"
 
 jobs:
   build:
@@ -16,9 +17,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose
-    - name: Get Version
-      run: rustc --version --verbose
+    - name: Check
+      run: cargo check --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: Clippy
+      run: cargo clippy --verbose --all
