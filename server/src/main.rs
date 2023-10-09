@@ -25,13 +25,21 @@ impl Server {
     }
 
     pub fn tick(&mut self) {
+        let messages = self.collect_messages();
+        self.process_messages(messages);
+    }
+
+    fn collect_messages(&mut self) -> Vec<(usize, ServerRequest)> {
         let mut messages = Vec::new();
         for (index, r) in self.connection.iter().enumerate() {
             while let Ok(message) = r.reqest_rx.try_recv() {
                 messages.push((index, message));
             }
         }
+        messages
+    }
 
+    fn process_messages(&mut self, messages: Vec<(usize, ServerRequest)>) {
         for (index, message) in messages.into_iter() {
             let r = &mut self.connection[index];
             match message {
