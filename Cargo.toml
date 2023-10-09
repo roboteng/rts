@@ -1,5 +1,6 @@
 [workspace]
 members = [
-    "ci",
-    "server",
+  "ci",
+  "game",
+  "server"
 ]
