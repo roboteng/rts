@@ -5,8 +5,12 @@ This project is primarily for learning and practicing things like:
 - Continuous Integration / Continuous Delivery
 - Test Driven Development and Behavior Driven Development
 - Domain Driven Design
+- Writing User Stories and Acceptance Criteria
 
 A lot of my thoughts on the design and comparing options are in [`Notes.md`](Notes.md).
+
+I want to make an RTS similar to [Age of Mythology](https://en.wikipedia.org/wiki/Age_of_Mythology).
+I'm still not sure close the game play will comg to AoM, but it will probably be my default for gameplay choices.
 
 ## Parts of the Project
 
@@ -22,3 +26,9 @@ This runs multplayer games, and manager connections between players
 
 This is generally the player's interface.
 It will be capable of running single player games, and connecting to a server for mulitplayer games.
+
+### CI
+
+I'm trying out [Dagger](https://dagger.io) for CI.
+It seemed to work well before I added bevy as a dependency, but now its not building correctly.
+That isn't Dagger's fault, I just haven't gone through and updated to work correctly with all the dependencies that a game engine expects.
