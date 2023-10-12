@@ -16,8 +16,10 @@ fn draw_main_menu(mut commands: Commands) {
         .spawn(NodeBundle {
             style: Style {
                 flex_direction: FlexDirection::Column,
+                width: Val::Vw(100.0),
                 ..Default::default()
             },
+            background_color: Color::DARK_GREEN.into(),
             ..Default::default()
         })
         .with_children(|builder| {
