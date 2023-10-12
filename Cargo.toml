@@ -1,6 +1,8 @@
 [workspace]
 members = [
+  # force split
   "ci",
   "game",
-  "server"
+  "server",
 ]
+default-members = ["game"]
