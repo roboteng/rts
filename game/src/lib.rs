@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_ui_dsl::*;
 
 pub struct BasePlugin;
 
@@ -9,38 +10,19 @@ impl Plugin for BasePlugin {
     }
 }
 
-fn draw_main_menu(mut commands: Commands) {
+fn c_background(node: &mut NodeBundle) {
+    node.background_color = Color::DARK_GREEN.into();
+    let style = &mut node.style;
+    style.flex_direction = FlexDirection::Column;
+    style.width = Val::Vw(100.0);
+}
+
+fn draw_main_menu(mut commands: Commands, assets: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
 
-    commands
-        .spawn(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                width: Val::Vw(100.0),
-                ..Default::default()
-            },
-            background_color: Color::DARK_GREEN.into(),
-            ..Default::default()
-        })
-        .with_children(|builder| {
-            builder.spawn(TextBundle::from_section(
-                "Hello, World!",
-                TextStyle::default(),
-            ));
-            builder
-                .spawn(ButtonBundle {
-                    ..Default::default()
-                })
-                .with_children(|builder| {
-                    builder.spawn(TextBundle::from_section(
-                        "Hello, Button!",
-                        TextStyle {
-                            color: Color::BLACK,
-                            ..Default::default()
-                        },
-                    ));
-                });
-        });
+    root(c_background, &assets, &mut commands, |p| {
+        text("Hello, DSL", (), (), p);
+    });
 }
 
 #[derive(Debug, Default, Hash, PartialEq, Eq, Clone, States)]
