@@ -29,6 +29,12 @@ async fn main() -> eyre::Result<()> {
     container
         .with_mounted_cache(format!("{cargo_home}/registry"), cargo_registry)
         .with_workdir(PROJECT)
+        .with_exec("apt-get update".split(' ').collect())
+        .with_exec(
+            "apt-get install -y --no-install-recommends libasound2-dev libudev-dev"
+                .split(' ')
+                .collect(),
+        )
         .with_exec(vec!["cargo", "check"])
         .with_exec(vec!["cargo", "test"])
         .with_exec(vec!["rustup", "component", "add", "clippy"])

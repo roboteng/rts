@@ -30,5 +30,5 @@ It will be capable of running single player games, and connecting to a server fo
 ### CI
 
 I'm trying out [Dagger](https://dagger.io) for CI.
-It seemed to work well before I added bevy as a dependency, but now its not building correctly.
-That isn't Dagger's fault, I just haven't gone through and updated to work correctly with all the dependencies that a game engine expects.
+It currently runs locally, but I haven't gotten to the point of running in GitHub Actions.
+It doesn't do any deployment, just CI.

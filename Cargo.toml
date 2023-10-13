@@ -5,4 +5,4 @@ members = [
   "game",
   "server",
 ]
-default-members = ["game"]
+default-members = ["game", "ci"]
