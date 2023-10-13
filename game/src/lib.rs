@@ -49,10 +49,12 @@ fn c_title_test(_: &AssetServer, a: &mut TextStyle) {
 }
 
 #[derive(Component)]
-struct QuitButton;
-
-#[derive(Component)]
-struct MyButton;
+enum MyButton {
+    SinglePlayer,
+    MultiPlayer,
+    Settings,
+    Quit,
+}
 
 fn draw_main_menu(mut commands: Commands, assets: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
@@ -61,16 +63,16 @@ fn draw_main_menu(mut commands: Commands, assets: Res<AssetServer>) {
         node(c_main_menu, p, |p| {
             text("The Tales our\nAncestors Told", (), c_title_test, p);
 
-            buttoni(c_button, MyButton, p, |p| {
+            buttoni(c_button, MyButton::SinglePlayer, p, |p| {
                 text("Single Player", (), c_button_text, p);
             });
-            buttoni(c_button, MyButton, p, |p| {
+            buttoni(c_button, MyButton::MultiPlayer, p, |p| {
                 text("Multi Player", (), c_button_text, p);
             });
-            buttoni(c_button, MyButton, p, |p| {
+            buttoni(c_button, MyButton::Settings, p, |p| {
                 text("Settings", (), c_button_text, p);
             });
-            buttoni(c_button, (QuitButton, MyButton), p, |p| {
+            buttoni(c_button, MyButton::Quit, p, |p| {
                 text("Quit", (), c_button_text, p);
             });
         });
@@ -93,12 +95,14 @@ fn button_interaction(
 }
 
 fn quit_interaction(
-    query: Query<&Interaction, (Changed<Interaction>, With<QuitButton>)>,
+    query: Query<(&Interaction, &MyButton), Changed<Interaction>>,
     mut exit_event: ResMut<Events<AppExit>>,
 ) {
-    for interaction in &query {
-        if let Interaction::Pressed = interaction {
-            exit_event.send(AppExit)
+    for (interaction, button) in &query {
+        if let MyButton::Quit = button {
+            if let Interaction::Pressed = interaction {
+                exit_event.send(AppExit)
+            }
         }
     }
 }
