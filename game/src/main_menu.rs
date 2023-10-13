@@ -1,11 +1,16 @@
 use bevy::{app::AppExit, prelude::*};
 use bevy_ui_dsl::*;
 
+use crate::GameState;
+
 pub struct MainMenuPlugin;
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, draw_main_menu)
-            .add_systems(Update, (button_interaction, button_click));
+        app.add_systems(OnEnter(GameState::MainMenu), draw_main_menu)
+            .add_systems(
+                Update,
+                (button_interaction, button_click).run_if(in_state(GameState::MainMenu)),
+            );
     }
 }
 
