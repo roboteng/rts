@@ -97,9 +97,8 @@ fn quit_interaction(
     mut exit_event: ResMut<Events<AppExit>>,
 ) {
     for interaction in &query {
-        match interaction {
-            Interaction::Pressed => exit_event.send(AppExit),
-            _ => {}
+        if let Interaction::Pressed = interaction {
+            exit_event.send(AppExit)
         }
     }
 }
