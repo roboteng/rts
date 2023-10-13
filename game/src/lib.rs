@@ -7,7 +7,7 @@ impl Plugin for BasePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_state::<GameState>()
             .add_systems(Startup, draw_main_menu)
-            .add_systems(Update, button_interaction);
+            .add_systems(Update, (button_interaction, quit_interaction));
     }
 }
 
@@ -41,7 +41,7 @@ fn c_button(_: &AssetServer, node: &mut ButtonBundle) {
 }
 
 fn c_button_text(_b: &AssetServer, a: &mut TextStyle) {
-    a.color = Color::BLACK.into();
+    a.color = Color::BLACK;
 }
 
 fn c_title_test(_: &AssetServer, a: &mut TextStyle) {
@@ -51,6 +51,9 @@ fn c_title_test(_: &AssetServer, a: &mut TextStyle) {
 #[derive(Component)]
 struct QuitButton;
 
+#[derive(Component)]
+struct MyButton;
+
 fn draw_main_menu(mut commands: Commands, assets: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
 
@@ -58,16 +61,16 @@ fn draw_main_menu(mut commands: Commands, assets: Res<AssetServer>) {
         node(c_main_menu, p, |p| {
             text("The Tales our\nAncestors Told", (), c_title_test, p);
 
-            button(c_button, p, |p| {
+            buttoni(c_button, MyButton, p, |p| {
                 text("Single Player", (), c_button_text, p);
             });
-            button(c_button, p, |p| {
+            buttoni(c_button, MyButton, p, |p| {
                 text("Multi Player", (), c_button_text, p);
             });
-            button(c_button, p, |p| {
+            buttoni(c_button, MyButton, p, |p| {
                 text("Settings", (), c_button_text, p);
             });
-            buttoni(c_button, QuitButton, p, |p| {
+            buttoni(c_button, (QuitButton, MyButton), p, |p| {
                 text("Quit", (), c_button_text, p);
             });
         });
@@ -75,20 +78,28 @@ fn draw_main_menu(mut commands: Commands, assets: Res<AssetServer>) {
 }
 
 fn button_interaction(
-    query: Query<&Interaction, (Changed<Interaction>, With<QuitButton>)>,
+    query: Query<&Interaction, (Changed<Interaction>, With<MyButton>)>,
     mut window: Query<&mut Window>,
-    mut exit_event: ResMut<Events<AppExit>>,
 ) {
     for interaction in &query {
         for mut window in &mut window {
             window.cursor.icon = match interaction {
-                Interaction::Pressed => {
-                    exit_event.send(AppExit);
-                    CursorIcon::Default
-                }
+                Interaction::Pressed => CursorIcon::Default,
                 Interaction::Hovered => CursorIcon::Hand,
                 Interaction::None => CursorIcon::Default,
             }
+        }
+    }
+}
+
+fn quit_interaction(
+    query: Query<&Interaction, (Changed<Interaction>, With<QuitButton>)>,
+    mut exit_event: ResMut<Events<AppExit>>,
+) {
+    for interaction in &query {
+        match interaction {
+            Interaction::Pressed => exit_event.send(AppExit),
+            _ => {}
         }
     }
 }
