@@ -14,6 +14,27 @@ fn setup_2d(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
 
+fn button_interaction<T: Component>(
+    query: Query<&Interaction, (Changed<Interaction>, With<T>)>,
+    mut window: Query<&mut Window>,
+) {
+    for interaction in &query {
+        for mut window in &mut window {
+            window.cursor.icon = match interaction {
+                Interaction::Pressed => CursorIcon::Default,
+                Interaction::Hovered => CursorIcon::Hand,
+                Interaction::None => CursorIcon::Default,
+            }
+        }
+    }
+}
+
+pub fn teardown<T: Component>(mut commands: Commands, query: Query<Entity, With<T>>) {
+    for e in &query {
+        commands.entity(e).despawn_recursive();
+    }
+}
+
 #[derive(Debug, Default, Hash, PartialEq, Eq, Clone, States)]
 enum GameState {
     #[default]
@@ -25,14 +46,18 @@ pub mod settings_page {
     use bevy::prelude::*;
     use bevy_ui_dsl::*;
 
-    use crate::{classes::*, GameState};
+    use crate::{classes::*, *};
 
     pub struct SettingsPlugin;
     impl Plugin for SettingsPlugin {
         fn build(&self, app: &mut App) {
             app.add_systems(OnEnter(GameState::Settings), draw_settings)
-                .add_systems(Update, button_actions.run_if(in_state(GameState::Settings)))
-                .add_systems(OnExit(GameState::Settings), teardown);
+                .add_systems(
+                    Update,
+                    (button_actions, button_interaction::<SettingsButton>)
+                        .run_if(in_state(GameState::Settings)),
+                )
+                .add_systems(OnExit(GameState::Settings), teardown::<OnSettings>);
         }
     }
 
@@ -56,18 +81,12 @@ pub mod settings_page {
         query: Query<(&Interaction, &SettingsButton), Changed<Interaction>>,
         mut state: ResMut<NextState<GameState>>,
     ) {
-        for i in &query {
-            if i.0 == &Interaction::Pressed {
-                match i.1 {
+        for (interaction, button) in &query {
+            if interaction == &Interaction::Pressed {
+                match button {
                     SettingsButton::Back => state.set(GameState::MainMenu),
                 }
             }
-        }
-    }
-
-    fn teardown(mut commands: Commands, query: Query<Entity, With<OnSettings>>) {
-        for e in &query {
-            commands.entity(e).despawn_recursive();
         }
     }
 

@@ -1,7 +1,7 @@
 use bevy::{app::AppExit, prelude::*};
 use bevy_ui_dsl::*;
 
-use crate::{classes::*, GameState};
+use crate::{classes::*, *};
 
 pub struct MainMenuPlugin;
 impl Plugin for MainMenuPlugin {
@@ -9,9 +9,10 @@ impl Plugin for MainMenuPlugin {
         app.add_systems(OnEnter(GameState::MainMenu), draw_main_menu)
             .add_systems(
                 Update,
-                (button_interaction, button_click).run_if(in_state(GameState::MainMenu)),
+                (button_interaction::<MainMenuButton>, button_click)
+                    .run_if(in_state(GameState::MainMenu)),
             )
-            .add_systems(OnExit(GameState::MainMenu), teardown);
+            .add_systems(OnExit(GameState::MainMenu), teardown::<OnMenuScreen>);
     }
 }
 
@@ -34,7 +35,7 @@ fn c_title_test(_: &AssetServer, a: &mut TextStyle) {
 struct OnMenuScreen;
 
 #[derive(Component)]
-enum MyButton {
+enum MainMenuButton {
     SinglePlayer,
     MultiPlayer,
     Settings,
@@ -51,16 +52,16 @@ fn draw_main_menu(mut commands: Commands, assets: Res<AssetServer>) {
             node(c_main_menu, p, |p| {
                 text("The Tales our\nAncestors Told", (), c_title_test, p);
 
-                buttoni(c_button, MyButton::SinglePlayer, p, |p| {
+                buttoni(c_button, MainMenuButton::SinglePlayer, p, |p| {
                     text("Single Player", (), c_button_text, p);
                 });
-                buttoni(c_button, MyButton::MultiPlayer, p, |p| {
+                buttoni(c_button, MainMenuButton::MultiPlayer, p, |p| {
                     text("Multi Player", (), c_button_text, p);
                 });
-                buttoni(c_button, MyButton::Settings, p, |p| {
+                buttoni(c_button, MainMenuButton::Settings, p, |p| {
                     text("Settings", (), c_button_text, p);
                 });
-                buttoni(c_button, MyButton::Quit, p, |p| {
+                buttoni(c_button, MainMenuButton::Quit, p, |p| {
                     text("Quit", (), c_button_text, p);
                 });
             });
@@ -68,41 +69,20 @@ fn draw_main_menu(mut commands: Commands, assets: Res<AssetServer>) {
     );
 }
 
-fn button_interaction(
-    query: Query<&Interaction, (Changed<Interaction>, With<MyButton>)>,
-    mut window: Query<&mut Window>,
-) {
-    for interaction in &query {
-        for mut window in &mut window {
-            window.cursor.icon = match interaction {
-                Interaction::Pressed => CursorIcon::Default,
-                Interaction::Hovered => CursorIcon::Hand,
-                Interaction::None => CursorIcon::Default,
-            }
-        }
-    }
-}
-
 fn button_click(
-    query: Query<(&Interaction, &MyButton), Changed<Interaction>>,
+    query: Query<(&Interaction, &MainMenuButton), Changed<Interaction>>,
     mut exit_event: ResMut<Events<AppExit>>,
     mut states: ResMut<NextState<GameState>>,
 ) {
     for (interaction, button) in &query {
         if let Interaction::Pressed = interaction {
             match button {
-                MyButton::Quit => exit_event.send(AppExit),
-                MyButton::Settings => {
+                MainMenuButton::Quit => exit_event.send(AppExit),
+                MainMenuButton::Settings => {
                     states.set(GameState::Settings);
                 }
                 _ => {}
             }
         }
-    }
-}
-
-fn teardown(mut commands: Commands, q: Query<Entity, With<OnMenuScreen>>) {
-    for e in &q {
-        commands.entity(e).despawn_recursive();
     }
 }
