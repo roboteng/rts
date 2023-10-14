@@ -1,7 +1,7 @@
 use bevy::{app::AppExit, prelude::*};
 use bevy_ui_dsl::*;
 
-use crate::GameState;
+use crate::{classes::*, GameState};
 
 pub struct MainMenuPlugin;
 impl Plugin for MainMenuPlugin {
@@ -15,20 +15,6 @@ impl Plugin for MainMenuPlugin {
     }
 }
 
-fn c_centers(node: &mut NodeBundle) {
-    node.style.display = Display::Flex;
-    node.style.align_content = AlignContent::SpaceAround;
-    node.style.justify_content = JustifyContent::SpaceAround;
-    node.style.align_items = AlignItems::Center;
-    node.style.justify_items = JustifyItems::Center;
-}
-
-fn c_background(node: &mut NodeBundle) {
-    node.background_color = Color::DARK_GREEN.into();
-    node.style.height = Val::Percent(100.0);
-    node.style.width = Val::Percent(100.0);
-}
-
 fn c_main_menu(node: &mut NodeBundle) {
     node.background_color = Color::MIDNIGHT_BLUE.into();
     node.style.padding = UiRect::all(Val::Px(20.0));
@@ -38,14 +24,6 @@ fn c_main_menu(node: &mut NodeBundle) {
     node.style.row_gap = Val::Px(10.0);
 
     node.style.max_width = Val::Vw(33.3);
-}
-
-fn c_button(_: &AssetServer, node: &mut ButtonBundle) {
-    node.style.padding = UiRect::all(Val::Px(8.0));
-}
-
-fn c_button_text(_b: &AssetServer, a: &mut TextStyle) {
-    a.color = Color::BLACK;
 }
 
 fn c_title_test(_: &AssetServer, a: &mut TextStyle) {

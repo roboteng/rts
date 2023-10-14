@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+pub mod classes;
 pub mod main_menu;
 
 pub struct BasePlugin;
