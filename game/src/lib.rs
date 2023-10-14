@@ -37,8 +37,11 @@ pub fn teardown<T: Component>(mut commands: Commands, query: Query<Entity, With<
 }
 
 #[derive(Debug, Default, Hash, PartialEq, Eq, Clone, States)]
-enum GameState {
+pub(crate) enum GameState {
     #[default]
     MainMenu,
     Settings,
 }
+
+#[cfg(test)]
+mod test;

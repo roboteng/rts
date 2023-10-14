@@ -35,7 +35,7 @@ fn c_title_test(_: &AssetServer, a: &mut TextStyle) {
 struct OnMenuScreen;
 
 #[derive(Component)]
-enum MainMenuButton {
+pub(crate) enum MainMenuButton {
     SinglePlayer,
     MultiPlayer,
     Settings,
