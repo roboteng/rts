@@ -4,10 +4,22 @@ pub mod classes;
 pub mod main_menu;
 pub mod settings_page;
 
-pub struct BasePlugin;
+#[derive(Default)]
+pub struct BasePlugin(GameState);
 impl Plugin for BasePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_state::<GameState>().add_systems(Startup, setup_2d);
+        let mut k = app
+            .world
+            .get_resource_mut::<NextState<GameState>>()
+            .unwrap();
+        k.set(self.0);
+    }
+}
+
+impl BasePlugin {
+    pub fn new(init_state: GameState) -> Self {
+        Self(init_state)
     }
 }
 
@@ -36,8 +48,8 @@ pub fn teardown<T: Component>(mut commands: Commands, query: Query<Entity, With<
     }
 }
 
-#[derive(Debug, Default, Hash, PartialEq, Eq, Clone, States)]
-pub(crate) enum GameState {
+#[derive(Debug, Default, Hash, PartialEq, Eq, Clone, Copy, States)]
+pub enum GameState {
     #[default]
     MainMenu,
     Settings,

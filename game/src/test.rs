@@ -49,7 +49,12 @@ impl AssetIo for IO {
 #[test]
 fn click_on_settings_button_goes_to_settings() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, BasePlugin, MainMenuPlugin, SettingsPlugin));
+    app.add_plugins((
+        MinimalPlugins,
+        BasePlugin::default(),
+        MainMenuPlugin,
+        SettingsPlugin,
+    ));
 
     fn click_settings(
         mut commands: Commands,
