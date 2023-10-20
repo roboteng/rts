@@ -77,10 +77,9 @@ fn button_click(
     for (interaction, button) in &query {
         if let Interaction::Pressed = interaction {
             match button {
+                MainMenuButton::SinglePlayer => states.set(GameState::InGame),
+                MainMenuButton::Settings => states.set(GameState::Settings),
                 MainMenuButton::Quit => exit_event.send(AppExit),
-                MainMenuButton::Settings => {
-                    states.set(GameState::Settings);
-                }
                 _ => {}
             }
         }

@@ -11,7 +11,7 @@ impl Plugin for BasePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_state::<GameState>()
             .add_systems(Startup, setup_2d)
-            .insert_resource(MyUiScale::Small);
+            .insert_resource(MyUiScale::Medium);
         let mut k = app
             .world
             .get_resource_mut::<NextState<GameState>>()
@@ -55,6 +55,7 @@ pub fn teardown<T: Component>(mut commands: Commands, query: Query<Entity, With<
 pub enum GameState {
     #[default]
     MainMenu,
+    InGame,
     Settings,
 }
 

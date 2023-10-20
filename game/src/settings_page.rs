@@ -9,11 +9,7 @@ impl Plugin for SettingsPlugin {
         app.add_systems(OnEnter(GameState::Settings), draw_settings)
             .add_systems(
                 Update,
-                (
-                    button_actions,
-                    button_interaction::<SettingsButton>,
-                    text_cursor,
-                )
+                (button_actions, button_interaction::<SettingsButton>)
                     .run_if(in_state(GameState::Settings)),
             )
             .add_systems(OnExit(GameState::Settings), teardown::<OnSettings>);
@@ -77,24 +73,6 @@ fn button_actions(
         }
     }
 }
-
-fn text_cursor(
-    query: Query<&Interaction, (Changed<Interaction>, With<TextBox>)>,
-    mut window: Query<&mut Window>,
-) {
-    for interaction in &query {
-        for mut window in &mut window {
-            match interaction {
-                Interaction::Pressed => {}
-                Interaction::Hovered => window.cursor.icon = CursorIcon::Text,
-                Interaction::None => window.cursor.icon = CursorIcon::Default,
-            }
-        }
-    }
-}
-
-#[derive(Component)]
-struct TextBox;
 
 #[derive(Component)]
 enum SettingsButton {
