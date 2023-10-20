@@ -58,7 +58,7 @@ pub enum GameState {
     Settings,
 }
 
-#[derive(Reflect, Resource, Clone, Copy)]
+#[derive(Reflect, Resource, Clone, Copy, PartialEq)]
 enum MyUiScale {
     Small,
     Medium,

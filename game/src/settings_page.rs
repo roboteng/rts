@@ -43,9 +43,21 @@ fn draw_settings(mut commands: Commands, assets: Res<AssetServer>, ui_scale: Res
             node((), p, |p| {
                 node((), p, |p| {
                     text("UI Scale", (), (), p);
+                    let scale = ui_scale.as_ref();
                     for e in MyUiScale::items() {
+                        let class = if e == *scale {
+                            ButtonBundle {
+                                background_color: Color::ORANGE.into(),
+                                ..Default::default()
+                            }
+                        } else {
+                            ButtonBundle {
+                                background_color: Color::GRAY.into(),
+                                ..Default::default()
+                            }
+                        };
                         node((), p, |p| {
-                            buttoni((), SettingsButton::UiScale(e), p, |p| {
+                            buttoni(class, SettingsButton::UiScale(e), p, |p| {
                                 text(e.to_string(), (), c_button_text, p);
                             });
                         });
@@ -70,6 +82,8 @@ fn button_actions(
             match button {
                 SettingsButton::Back => state.set(GameState::MainMenu),
                 SettingsButton::UiScale(s) => {
+                    let k = my_ui_scale.as_mut();
+                    *k = *s;
                     ui_scale.scale = s.scale() as f64;
                 }
             }
