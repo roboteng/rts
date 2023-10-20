@@ -76,6 +76,7 @@ fn click_on_settings_button_goes_to_settings() {
 
     app.add_systems(Update, click_settings);
     app.insert_resource(AssetServer::new(IO));
+    app.insert_resource(UiScale { scale: 1.0 });
 
     app.update();
     app.update();
