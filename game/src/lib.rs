@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use std::fmt::Display;
 
 pub mod classes;
 pub mod main_menu;
@@ -8,7 +9,9 @@ pub mod settings_page;
 pub struct BasePlugin(GameState);
 impl Plugin for BasePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_state::<GameState>().add_systems(Startup, setup_2d);
+        app.add_state::<GameState>()
+            .add_systems(Startup, setup_2d)
+            .insert_resource(MyUiScale::Small);
         let mut k = app
             .world
             .get_resource_mut::<NextState<GameState>>()
@@ -53,6 +56,38 @@ pub enum GameState {
     #[default]
     MainMenu,
     Settings,
+}
+
+#[derive(Reflect, Resource, Clone, Copy)]
+enum MyUiScale {
+    Small,
+    Medium,
+    Large,
+}
+
+impl MyUiScale {
+    pub fn items() -> Vec<Self> {
+        vec![Self::Small, Self::Medium, Self::Large]
+    }
+
+    pub fn scale(&self) -> f32 {
+        match self {
+            Self::Small => 0.75,
+            Self::Medium => 1.0,
+            Self::Large => 1.5,
+        }
+    }
+}
+
+impl Display for MyUiScale {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Self::Small => "Small",
+            Self::Medium => "Medium",
+            Self::Large => "Large",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 #[cfg(test)]

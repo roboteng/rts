@@ -33,7 +33,7 @@ fn c_text_box_inner(a: &mut NodeBundle) {
     a.background_color = Color::WHITE.into();
 }
 
-fn draw_settings(mut commands: Commands, assets: Res<AssetServer>) {
+fn draw_settings(mut commands: Commands, assets: Res<AssetServer>, ui_scale: Res<MyUiScale>) {
     rooti(
         (c_background, c_centers),
         &assets,
@@ -43,13 +43,13 @@ fn draw_settings(mut commands: Commands, assets: Res<AssetServer>) {
             node((), p, |p| {
                 node((), p, |p| {
                     text("UI Scale", (), (), p);
-                    buttoni((), TextBox, p, |p| {
-                        node(c_text_box, p, |p| {
-                            node(c_text_box_inner, p, |p| {
-                                text("2.0", (), c_button_text, p);
+                    for e in MyUiScale::items() {
+                        node((), p, |p| {
+                            buttoni((), SettingsButton::UiScale(e), p, |p| {
+                                text(e.to_string(), (), c_button_text, p);
                             });
                         });
-                    });
+                    }
                 });
                 buttoni(c_button, SettingsButton::Back, p, |p| {
                     text("Back", (), c_button_text, p);
@@ -62,11 +62,16 @@ fn draw_settings(mut commands: Commands, assets: Res<AssetServer>) {
 fn button_actions(
     query: Query<(&Interaction, &SettingsButton), Changed<Interaction>>,
     mut state: ResMut<NextState<GameState>>,
+    mut my_ui_scale: ResMut<MyUiScale>,
+    mut ui_scale: ResMut<UiScale>,
 ) {
     for (interaction, button) in &query {
         if interaction == &Interaction::Pressed {
             match button {
                 SettingsButton::Back => state.set(GameState::MainMenu),
+                SettingsButton::UiScale(s) => {
+                    ui_scale.scale = s.scale() as f64;
+                }
             }
         }
     }
@@ -93,6 +98,7 @@ struct TextBox;
 #[derive(Component)]
 enum SettingsButton {
     Back,
+    UiScale(MyUiScale),
 }
 
 #[derive(Component)]
