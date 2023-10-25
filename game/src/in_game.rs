@@ -34,7 +34,13 @@ fn setup(
         ..Default::default()
     });
 
-    let mesh = meshes.add(shape::Box::new(4.0, 1.0, 2.0).into());
+    let mesh = meshes.add(
+        shape::Plane {
+            size: 20.0,
+            subdivisions: 0,
+        }
+        .into(),
+    );
     let material = materials.add(Color::ALICE_BLUE.into());
 
     commands.spawn(PbrBundle {
@@ -42,26 +48,32 @@ fn setup(
         material,
         ..Default::default()
     });
+
+    let box_mesh = meshes.add(shape::Box::new(0.8, 1.0, 0.8).into());
+    let box_material = materials.add(Color::SEA_GREEN.into());
+
+    for i in 0..2 {
+        commands.spawn(PbrBundle {
+            mesh: box_mesh.clone(),
+            material: box_material.clone(),
+            transform: Transform::from_xyz(i as f32, 0.0, i as f32),
+            ..Default::default()
+        });
+    }
 }
 
 fn c_root(n: &mut NodeBundle) {
     n.style.flex_direction = FlexDirection::ColumnReverse;
 }
 
+fn c_hud(n: &mut NodeBundle) {
+    n.style.width = Val::Vw(100.0);
+    n.style.height = Val::Vh(20.0);
+    n.background_color = Color::MAROON.into();
+}
+
 fn draw_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
     root(c_root, &asset_server, &mut commands, |p| {
-        node(
-            NodeBundle {
-                style: Style {
-                    width: Val::Vw(100.0),
-                    height: Val::Vh(20.0),
-                    ..default()
-                },
-                background_color: Color::MAROON.into(),
-                ..Default::default()
-            },
-            p,
-            |_| {},
-        );
+        node(c_hud, p, |_| {});
     });
 }
