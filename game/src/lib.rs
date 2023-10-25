@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use std::fmt::Display;
 
 pub mod classes;
+pub mod in_game;
 pub mod main_menu;
 pub mod settings_page;
 
