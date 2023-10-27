@@ -19,13 +19,11 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.spawn((
-        Camera3dBundle {
-            camera: Camera {
-                order: 1,
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(8.0, 8.0, 7.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..Default::default()
+        {
+            let mut camera = Camera3dBundle::default();
+            camera.camera.order = 0;
+            camera.transform = Transform::from_xyz(8.0, 8.0, 7.0).looking_at(Vec3::ZERO, Vec3::Y);
+            camera
         },
         RaycastPickCamera::default(),
     ));
@@ -67,6 +65,7 @@ fn setup(
                 ..Default::default()
             },
             PickableBundle::default(),
+            RaycastPickTarget::default(),
         ));
     }
 }
@@ -84,8 +83,14 @@ fn draw_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
         c_hud,
         &asset_server,
         &mut commands,
-        (Hud, Pickable::IGNORE),
-        |p| {},
+        (
+            Hud,
+            Pickable {
+                should_block_lower: true,
+                should_emit_events: false,
+            },
+        ),
+        |_| {},
     );
 }
 

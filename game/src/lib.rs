@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 use std::fmt::Display;
 
 pub mod classes;
@@ -30,7 +30,11 @@ impl BasePlugin {
 fn setup_2d(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         camera: Camera {
-            order: 0,
+            order: 1,
+            ..Default::default()
+        },
+        camera_2d: Camera2d {
+            clear_color: ClearColorConfig::None,
             ..Default::default()
         },
         ..Default::default()
