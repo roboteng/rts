@@ -35,7 +35,6 @@ fn setup_2d(mut commands: Commands) {
         },
         camera_2d: Camera2d {
             clear_color: ClearColorConfig::None,
-            ..Default::default()
         },
         ..Default::default()
     });
