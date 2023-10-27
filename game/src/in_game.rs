@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_mod_picking::prelude::*;
 use bevy_ui_dsl::*;
 
 use crate::GameState;
@@ -6,7 +7,9 @@ use crate::GameState;
 pub struct InGamePlugin;
 impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::InGame), (setup, draw_hud));
+        app.add_plugins(DefaultPickingPlugins)
+            .add_systems(OnEnter(GameState::InGame), (setup, draw_hud))
+            .add_systems(Update, apply_seelected);
     }
 }
 
@@ -15,14 +18,17 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands.spawn(Camera3dBundle {
-        camera: Camera {
-            order: 1,
+    commands.spawn((
+        Camera3dBundle {
+            camera: Camera {
+                order: 1,
+                ..Default::default()
+            },
+            transform: Transform::from_xyz(8.0, 8.0, 7.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         },
-        transform: Transform::from_xyz(8.0, 8.0, 7.0).looking_at(Vec3::splat(0.0), Vec3::Y),
-        ..Default::default()
-    });
+        RaycastPickCamera::default(),
+    ));
 
     commands.spawn(PointLightBundle {
         point_light: PointLight {
@@ -36,7 +42,7 @@ fn setup(
 
     let mesh = meshes.add(
         shape::Plane {
-            size: 20.0,
+            size: 10.0,
             subdivisions: 0,
         }
         .into(),
@@ -53,27 +59,45 @@ fn setup(
     let box_material = materials.add(Color::SEA_GREEN.into());
 
     for i in 0..2 {
-        commands.spawn(PbrBundle {
-            mesh: box_mesh.clone(),
-            material: box_material.clone(),
-            transform: Transform::from_xyz(i as f32, 0.0, i as f32),
-            ..Default::default()
-        });
+        commands.spawn((
+            PbrBundle {
+                mesh: box_mesh.clone(),
+                material: box_material.clone(),
+                transform: Transform::from_xyz(i as f32, 0.0, i as f32),
+                ..Default::default()
+            },
+            PickableBundle::default(),
+        ));
     }
-}
-
-fn c_root(n: &mut NodeBundle) {
-    n.style.flex_direction = FlexDirection::ColumnReverse;
 }
 
 fn c_hud(n: &mut NodeBundle) {
     n.style.width = Val::Vw(100.0);
     n.style.height = Val::Vh(20.0);
+    n.style.top = Val::Vh(80.0);
+    n.style.position_type = PositionType::Absolute;
     n.background_color = Color::MAROON.into();
 }
 
 fn draw_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
-    root(c_root, &asset_server, &mut commands, |p| {
-        node(c_hud, p, |_| {});
-    });
+    rooti(
+        c_hud,
+        &asset_server,
+        &mut commands,
+        (Hud, Pickable::IGNORE),
+        |p| {},
+    );
+}
+
+#[derive(Component)]
+struct Hud;
+
+fn apply_seelected(q: Query<(Entity, &PickingInteraction)>) {
+    for (ent, p) in &q {
+        match p {
+            PickingInteraction::Pressed => println!("{ent:?}"),
+            PickingInteraction::Hovered => {}
+            PickingInteraction::None => {}
+        }
+    }
 }

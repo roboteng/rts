@@ -28,7 +28,13 @@ impl BasePlugin {
 }
 
 fn setup_2d(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle {
+        camera: Camera {
+            order: 0,
+            ..Default::default()
+        },
+        ..Default::default()
+    });
 }
 
 fn button_interaction<T: Component>(
