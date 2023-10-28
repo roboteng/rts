@@ -66,6 +66,10 @@ fn setup(
             },
             PickableBundle::default(),
             RaycastPickTarget::default(),
+            Health {
+                max: 5.0,
+                current: (i + 2) as f32,
+            },
         ));
     }
 }
@@ -90,19 +94,40 @@ fn draw_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
                 should_emit_events: false,
             },
         ),
-        |_| {},
+        |p| {
+            texti("", (), (), HealthVis, p);
+        },
     );
 }
 
 #[derive(Component)]
 struct Hud;
 
-fn apply_seelected(q: Query<(Entity, &PickingInteraction)>) {
-    for (ent, p) in &q {
-        match p {
-            PickingInteraction::Pressed => println!("{ent:?}"),
-            PickingInteraction::Hovered => {}
-            PickingInteraction::None => {}
+#[derive(Component)]
+struct HealthVis;
+
+#[derive(Component)]
+struct Health {
+    max: f32,
+    current: f32,
+}
+
+fn apply_seelected(
+    q: Query<(&Health, &PickingInteraction), Changed<PickingInteraction>>,
+    mut texts: Query<&mut Text, With<HealthVis>>,
+) {
+    for (health, interaction) in &q {
+        for mut text in &mut texts {
+            match interaction {
+                PickingInteraction::Pressed => {
+                    text.sections = vec![TextSection {
+                        value: format!("{} of {}", health.current, health.max),
+                        style: TextStyle::default(),
+                    }]
+                }
+                PickingInteraction::Hovered => {}
+                PickingInteraction::None => text.sections = vec![],
+            }
         }
     }
 }
