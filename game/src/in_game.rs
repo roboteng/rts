@@ -113,21 +113,23 @@ struct Health {
 }
 
 fn apply_seelected(
-    q: Query<(&Health, &PickingInteraction), Changed<PickingInteraction>>,
+    q: Query<(&Health, &PickSelection)>,
     mut texts: Query<&mut Text, With<HealthVis>>,
 ) {
-    for (health, interaction) in &q {
-        for mut text in &mut texts {
-            match interaction {
-                PickingInteraction::Pressed => {
-                    text.sections = vec![TextSection {
-                        value: format!("{} of {}", health.current, health.max),
-                        style: TextStyle::default(),
-                    }]
-                }
-                PickingInteraction::Hovered => {}
-                PickingInteraction::None => text.sections = vec![],
-            }
+    let selections = q
+        .iter()
+        .filter(|(_, s)| s.is_selected)
+        .map(|(h, _)| h)
+        .collect::<Vec<_>>();
+    for mut text in &mut texts {
+        if selections.len() == 1 {
+            let health = selections[0];
+            text.sections = vec![TextSection {
+                value: format!("{} of {}", health.current, health.max),
+                style: TextStyle::default(),
+            }];
+        } else {
+            text.sections = vec![];
         }
     }
 }
