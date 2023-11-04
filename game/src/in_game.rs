@@ -9,7 +9,10 @@ impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(DefaultPickingPlugins)
             .add_systems(OnEnter(GameState::InGame), (setup, draw_hud))
-            .add_systems(Update, (apply_seelected, click_on_ground));
+            .add_systems(
+                Update,
+                (apply_seelected, click_on_ground, process_user_commands),
+            );
     }
 }
 
@@ -69,6 +72,7 @@ fn setup(
                 max: 5.0,
                 current: (i + 2) as f32,
             },
+            UserCommands(Vec::new()),
         ));
     }
 }
@@ -109,6 +113,9 @@ struct Ground;
 struct HealthVis;
 
 #[derive(Component)]
+struct UserCommands(Vec<Vec3>);
+
+#[derive(Component)]
 struct Health {
     max: f32,
     current: f32,
@@ -136,9 +143,39 @@ fn apply_seelected(
     }
 }
 
-fn click_on_ground(ev: EventReader<Pointer<Click>>) {
-    let len = ev.len();
-    if len != 0 {
-        println!("event len: {len}",);
+fn click_on_ground(
+    grounds: Query<Entity, With<Ground>>,
+    mut ev: EventReader<Pointer<Click>>,
+    mut selecteds: Query<(&mut UserCommands, &PickSelection)>,
+) {
+    if !ev.is_empty() {
+        if let Some(ground) = grounds.iter().next() {
+            for e in &mut ev {
+                if e.target == ground {
+                    match e.button {
+                        PointerButton::Primary => {}
+                        PointerButton::Secondary => {
+                            for (mut selected, selection) in &mut selecteds {
+                                if !selection.is_selected {
+                                    continue;
+                                }
+                                selected.0.push(e.hit.position.unwrap());
+                            }
+                        }
+                        PointerButton::Middle => {}
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn process_user_commands(mut actions: Query<(&mut Transform, &mut UserCommands)>) {
+    for (mut trans, mut comms) in &mut actions {
+        if comms.0.is_empty() {
+            continue;
+        }
+        trans.translation = comms.0[0];
+        comms.0.clear();
     }
 }
