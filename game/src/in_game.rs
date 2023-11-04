@@ -9,7 +9,7 @@ impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(DefaultPickingPlugins)
             .add_systems(OnEnter(GameState::InGame), (setup, draw_hud))
-            .add_systems(Update, apply_seelected);
+            .add_systems(Update, (apply_seelected, click_on_ground));
     }
 }
 
@@ -18,15 +18,12 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands.spawn((
-        {
-            let mut camera = Camera3dBundle::default();
-            camera.camera.order = 0;
-            camera.transform = Transform::from_xyz(8.0, 8.0, 7.0).looking_at(Vec3::ZERO, Vec3::Y);
-            camera
-        },
-        RaycastPickCamera::default(),
-    ));
+    commands.spawn(({
+        let mut camera = Camera3dBundle::default();
+        camera.camera.order = 0;
+        camera.transform = Transform::from_xyz(8.0, 8.0, 7.0).looking_at(Vec3::ZERO, Vec3::Y);
+        camera
+    },));
 
     commands.spawn(PointLightBundle {
         point_light: PointLight {
@@ -47,11 +44,14 @@ fn setup(
     );
     let material = materials.add(Color::ALICE_BLUE.into());
 
-    commands.spawn(PbrBundle {
-        mesh,
-        material,
-        ..Default::default()
-    });
+    commands.spawn((
+        PbrBundle {
+            mesh,
+            material,
+            ..Default::default()
+        },
+        Ground,
+    ));
 
     let box_mesh = meshes.add(shape::Box::new(0.8, 1.0, 0.8).into());
     let box_material = materials.add(Color::SEA_GREEN.into());
@@ -65,7 +65,6 @@ fn setup(
                 ..Default::default()
             },
             PickableBundle::default(),
-            RaycastPickTarget::default(),
             Health {
                 max: 5.0,
                 current: (i + 2) as f32,
@@ -104,6 +103,9 @@ fn draw_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
 struct Hud;
 
 #[derive(Component)]
+struct Ground;
+
+#[derive(Component)]
 struct HealthVis;
 
 #[derive(Component)]
@@ -131,5 +133,12 @@ fn apply_seelected(
         } else {
             text.sections = vec![];
         }
+    }
+}
+
+fn click_on_ground(ev: EventReader<Pointer<Click>>) {
+    let len = ev.len();
+    if len != 0 {
+        println!("event len: {len}",);
     }
 }
