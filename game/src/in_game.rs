@@ -159,7 +159,7 @@ fn click_on_ground(
                                 if !selection.is_selected {
                                     continue;
                                 }
-                                selected.0.push(e.hit.position.unwrap());
+                                e.hit.position.map(|pos| selected.0.push(pos));
                             }
                         }
                         PointerButton::Middle => {}
@@ -171,7 +171,7 @@ fn click_on_ground(
 }
 
 fn process_user_commands(mut actions: Query<(&mut Transform, &mut UserCommands)>) {
-    for (mut trans, mut comms) in &mut actions {
+    for (mut trans, mut comms) in actions.iter_mut() {
         if comms.0.is_empty() {
             continue;
         }
