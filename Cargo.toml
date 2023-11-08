@@ -5,3 +5,4 @@ members = [
   "game",
   "server",
 ]
+resolver = "2"
