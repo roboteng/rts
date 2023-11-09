@@ -5,6 +5,7 @@ This will mostly be a shell that the game can fit into.
 
 It might even be a good idea to get to this point, then restart.
 
+- [ ] Separate Server logic from Client behavior
 - [ ] Create server that can host a game
 - [ ] Implement different players
 - [ ] Implement multi-player
