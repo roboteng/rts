@@ -67,7 +67,13 @@ fn setup(
                 transform: Transform::from_xyz(i as f32, 0.0, i as f32),
                 ..Default::default()
             },
-            PickableBundle::default(),
+            PickableBundle {
+                pickable: Pickable {
+                    should_block_lower: false,
+                    should_emit_events: true,
+                },
+                ..Default::default()
+            },
             Health {
                 max: 5.0,
                 current: (i + 2) as f32,
