@@ -90,3 +90,35 @@ Guest
 - When Bob joins
 - Then Bob is a Guest
 - And Bob is not be able to change the number  of players to 3
+
+## Code Organization for multi/single player
+
+I'd like to have different groups for the different game modes.
+The logic for how to run a game should be independant of things like:
+
+- how to render the game
+- how to accept player input
+
+This means that I'd need a couple of different components:
+
+- Accept player input
+- Render the game to a screen
+- Run game logic
+- Run the AI
+
+I can see each of these as being a `Plugin` that could be added at build time.
+For example, a nromal single player game may need all of these.
+But the multiplayer server might only need to run game logic and AI.
+
+In order to connect all thes components, something needs to act as glue.
+In the multiplayer case, messages need to be sent over the network,
+while in the single player case, we could use a differnt method of sending messages.
+
+It makes sense to me to have another set of `Plugin`s that act as glue in different scenarios.
+We might have one `Plugin` that takes events emitted by the game logic,
+and sends those out over the network.
+It would then have a similar `Plugin` that listens to the network, and emits game state changes.
+
+That set of `Plugin`s would be able to connect a server to clients.
+We could have a different `Plugin` that would skip the network.
+It would take events emitted from the game logic, and perform game state changes.
