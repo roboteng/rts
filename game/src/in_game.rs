@@ -154,22 +154,14 @@ fn click_on_ground(
     mut ev: EventReader<Pointer<Click>>,
     mut selecteds: Query<(&mut UserCommands, &PickSelection)>,
 ) {
-    if !ev.is_empty() {
-        if let Some(ground) = grounds.iter().next() {
-            for e in &mut ev {
-                if e.target == ground {
-                    match e.button {
-                        PointerButton::Primary => {}
-                        PointerButton::Secondary => {
-                            for (mut selected, selection) in &mut selecteds {
-                                if !selection.is_selected {
-                                    continue;
-                                }
-                                e.hit.position.map(|pos| selected.0.push(pos));
-                            }
-                        }
-                        PointerButton::Middle => {}
+    if let Some(ground) = grounds.iter().next() {
+        for e in &mut ev {
+            if e.target == ground && PointerButton::Secondary == e.button {
+                for (mut selected, selection) in &mut selecteds {
+                    if !selection.is_selected {
+                        continue;
                     }
+                    e.hit.position.map(|pos| selected.0.push(pos));
                 }
             }
         }
