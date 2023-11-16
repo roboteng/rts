@@ -107,12 +107,12 @@ This means that I'd need a couple of different components:
 - Run the AI
 
 I can see each of these as being a `Plugin` that could be added at build time.
-For example, a nromal single player game may need all of these.
+For example, a normal single player game may need all of these.
 But the multiplayer server might only need to run game logic and AI.
 
-In order to connect all thes components, something needs to act as glue.
+In order to connect all these components, something needs to act as glue.
 In the multiplayer case, messages need to be sent over the network,
-while in the single player case, we could use a differnt method of sending messages.
+while in the single player case, we could use a different method of sending messages.
 
 It makes sense to me to have another set of `Plugin`s that act as glue in different scenarios.
 We might have one `Plugin` that takes events emitted by the game logic,
@@ -122,3 +122,9 @@ It would then have a similar `Plugin` that listens to the network, and emits gam
 That set of `Plugin`s would be able to connect a server to clients.
 We could have a different `Plugin` that would skip the network.
 It would take events emitted from the game logic, and perform game state changes.
+
+### Initial design
+
+After refactoring a `bevy_renet` example and some thought, I think I know how I want to set up these `Plugin`s. The main plugin will hold the game logic. This will take events/world queries as inputs, and change the state of the world. In the case of a single player game, nothing needs to be done to inform the player, since it will be in the same world, and the render will give all the information to the player. In the case of a multiplayer game, there will be a plugin that has queries, (mostly queries with a `Changed<_>` part). These changes can get sent over the network, and then replicated on the client side.
+
+As far as getting user input to the game logic, we can have one player input component that converts keyboard/mouse events into game input events. We can then have to kinds of components that take game input events as input. One would convert those directly to world updates that the game logic would detect, and the other would be a pair of components to send and receive those events over the network in multiplayer scenario.
