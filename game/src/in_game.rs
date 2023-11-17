@@ -7,12 +7,25 @@ use crate::GameState;
 pub struct InGamePlugin;
 impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(DefaultPickingPlugins)
-            .add_systems(OnEnter(GameState::InGame), (setup, draw_hud))
-            .add_systems(
-                Update,
-                (apply_seelected, click_on_ground, process_user_commands),
-            );
+        app.add_plugins((DefaultPickingPlugins, GameLogicPlugin, PlayerGUIPlugin))
+            .add_systems(Update, click_on_ground);
+    }
+}
+
+struct GameLogicPlugin;
+impl Plugin for GameLogicPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(GameState::InGame), setup);
+        app.add_systems(Update, process_user_commands);
+    }
+}
+
+struct PlayerGUIPlugin;
+impl Plugin for PlayerGUIPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(GameState::InGame), draw_hud);
+
+        app.add_systems(Update, show_selection);
     }
 }
 
@@ -127,7 +140,7 @@ struct Health {
     current: f32,
 }
 
-fn apply_seelected(
+fn show_selection(
     q: Query<(&Health, &PickSelection)>,
     mut texts: Query<&mut Text, With<HealthVis>>,
 ) {
@@ -149,6 +162,7 @@ fn apply_seelected(
     }
 }
 
+// TODO Split into two
 fn click_on_ground(
     grounds: Query<Entity, With<Ground>>,
     mut ev: EventReader<Pointer<Click>>,
