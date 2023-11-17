@@ -8,7 +8,7 @@ pub struct InGamePlugin;
 impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((DefaultPickingPlugins, GameLogicPlugin, PlayerGUIPlugin))
-            .add_systems(Update, click_on_ground);
+            .add_event::<SelectEvent>();
     }
 }
 
@@ -16,7 +16,7 @@ struct GameLogicPlugin;
 impl Plugin for GameLogicPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame), setup);
-        app.add_systems(Update, process_user_commands);
+        app.add_systems(Update, (process_user_commands, click_on_ground2));
     }
 }
 
@@ -25,7 +25,7 @@ impl Plugin for PlayerGUIPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame), draw_hud);
 
-        app.add_systems(Update, show_selection);
+        app.add_systems(Update, (show_selection, click_on_ground));
     }
 }
 
@@ -162,22 +162,43 @@ fn show_selection(
     }
 }
 
+#[derive(Event)]
+struct SelectEvent {
+    pos: Vec3,
+    entity: Entity,
+}
+
 // TODO Split into two
 fn click_on_ground(
     grounds: Query<Entity, With<Ground>>,
     mut ev: EventReader<Pointer<Click>>,
-    mut selecteds: Query<(&mut UserCommands, &PickSelection)>,
+    mut selections: EventWriter<SelectEvent>,
+    mut selecteds: Query<(&mut UserCommands, &PickSelection, Entity)>,
 ) {
     if let Some(ground) = grounds.iter().next() {
         for e in &mut ev {
             if e.target == ground && PointerButton::Secondary == e.button {
-                for (mut selected, selection) in &mut selecteds {
+                for (mut selected, selection, entity) in &mut selecteds {
                     if !selection.is_selected {
                         continue;
                     }
-                    e.hit.position.map(|pos| selected.0.push(pos));
+                    if let Some(pos) = e.hit.position {
+                        let event = SelectEvent { pos, entity };
+                        selections.send(event);
+                    }
                 }
             }
+        }
+    }
+}
+
+fn click_on_ground2(
+    mut selections: EventReader<SelectEvent>,
+    mut selecteds: Query<(&mut UserCommands, Entity)>,
+) {
+    for event in &mut selections {
+        if let Ok((ref mut commands, _)) = selecteds.get_mut(event.entity) {
+            commands.0.push(event.pos);
         }
     }
 }
