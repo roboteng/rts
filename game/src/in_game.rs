@@ -16,7 +16,7 @@ struct GameLogicPlugin;
 impl Plugin for GameLogicPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame), setup);
-        app.add_systems(Update, (process_user_commands, click_on_ground2));
+        app.add_systems(Update, (process_user_commands, process_commands));
     }
 }
 
@@ -25,7 +25,7 @@ impl Plugin for PlayerGUIPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame), draw_hud);
 
-        app.add_systems(Update, (show_selection, click_on_ground));
+        app.add_systems(Update, (show_selection, generate_commands));
     }
 }
 
@@ -165,20 +165,20 @@ fn show_selection(
 #[derive(Event)]
 struct SelectEvent {
     pos: Vec3,
+    // TODO replace with runtime independant ID
     entity: Entity,
 }
 
-// TODO Split into two
-fn click_on_ground(
+fn generate_commands(
     grounds: Query<Entity, With<Ground>>,
     mut ev: EventReader<Pointer<Click>>,
     mut selections: EventWriter<SelectEvent>,
-    mut selecteds: Query<(&mut UserCommands, &PickSelection, Entity)>,
+    selecteds: Query<(&PickSelection, Entity), With<UserCommands>>,
 ) {
     if let Some(ground) = grounds.iter().next() {
         for e in &mut ev {
             if e.target == ground && PointerButton::Secondary == e.button {
-                for (mut selected, selection, entity) in &mut selecteds {
+                for (selection, entity) in &selecteds {
                     if !selection.is_selected {
                         continue;
                     }
@@ -192,12 +192,12 @@ fn click_on_ground(
     }
 }
 
-fn click_on_ground2(
+fn process_commands(
     mut selections: EventReader<SelectEvent>,
-    mut selecteds: Query<(&mut UserCommands, Entity)>,
+    mut selecteds: Query<&mut UserCommands>,
 ) {
     for event in &mut selections {
-        if let Ok((ref mut commands, _)) = selecteds.get_mut(event.entity) {
+        if let Ok(mut commands) = selecteds.get_mut(event.entity) {
             commands.0.push(event.pos);
         }
     }
