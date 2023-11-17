@@ -27,6 +27,8 @@ This runs multplayer games, and manager connections between players
 This is generally the player's interface.
 It will be capable of running single player games, and connecting to a server for mulitplayer games.
 
+`cargo run --bin game`
+
 ### CI
 
 I'm trying out [Dagger](https://dagger.io) for CI.
