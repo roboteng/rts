@@ -20,7 +20,7 @@ async fn main() -> eyre::Result<()> {
 
     let container = client
         .container()
-        .from("rust:1.71.1")
+        .from("rust:1.74.0")
         .with_mounted_directory(PROJECT, host_source_dir.id().await?)
         .with_mounted_cache(PROJECT_TARGET, build_cache);
 

@@ -176,7 +176,7 @@ fn generate_commands(
     selecteds: Query<(&PickSelection, Entity), With<UserCommands>>,
 ) {
     if let Some(ground) = grounds.iter().next() {
-        for e in &mut ev {
+        for e in ev.read() {
             if e.target == ground && PointerButton::Secondary == e.button {
                 for (selection, entity) in &selecteds {
                     if !selection.is_selected {
@@ -196,7 +196,7 @@ fn process_commands(
     mut selections: EventReader<SelectEvent>,
     mut selecteds: Query<&mut UserCommands>,
 ) {
-    for event in &mut selections {
+    for event in selections.read() {
         if let Ok(mut commands) = selecteds.get_mut(event.entity) {
             commands.0.push(event.pos);
         }

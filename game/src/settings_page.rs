@@ -67,7 +67,7 @@ fn button_actions(
                 SettingsButton::UiScale(s) => {
                     let k = my_ui_scale.as_mut();
                     *k = *s;
-                    ui_scale.scale = s.scale() as f64;
+                    ui_scale.0 = s.scale() as f64;
                 }
             }
         }
