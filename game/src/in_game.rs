@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 use bevy_ui_dsl::*;
 
-use crate::GameState;
+use crate::{GameState, PlayType};
 
 pub struct InGamePlugin;
 impl Plugin for InGamePlugin {
@@ -20,12 +20,19 @@ impl Plugin for GameLogicPlugin {
     }
 }
 
+fn is_player(game: Res<State<GameState>>, play: Res<State<PlayType>>) -> bool {
+    *game.as_ref().get() == GameState::InGame && *play.as_ref().get() != PlayType::None
+}
+
 struct PlayerGUIPlugin;
 impl Plugin for PlayerGUIPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame), draw_hud);
 
-        app.add_systems(Update, (show_selection, generate_commands));
+        app.add_systems(
+            Update,
+            (show_selection, generate_commands).run_if(is_player),
+        );
     }
 }
 
