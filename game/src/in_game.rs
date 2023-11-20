@@ -67,6 +67,7 @@ fn setup(
             ..Default::default()
         },
         Ground,
+        NetId(0),
     ));
 
     let box_mesh = meshes.add(shape::Box::new(0.8, 1.0, 0.8).into());
@@ -92,6 +93,7 @@ fn setup(
                 current: (i + 2) as f32,
             },
             UserCommands(Vec::new()),
+            NetId(i + 1),
         ));
     }
 }
@@ -162,28 +164,30 @@ fn show_selection(
     }
 }
 
+#[derive(Component, PartialEq, Eq, Clone, Copy, Debug)]
+struct NetId(u64);
+
 #[derive(Event)]
 struct SelectEvent {
     pos: Vec3,
-    // TODO replace with runtime independant ID
-    entity: Entity,
+    entity: NetId,
 }
 
 fn generate_commands(
     grounds: Query<Entity, With<Ground>>,
     mut ev: EventReader<Pointer<Click>>,
     mut selections: EventWriter<SelectEvent>,
-    selecteds: Query<(&PickSelection, Entity), With<UserCommands>>,
+    selecteds: Query<(&PickSelection, &NetId), With<UserCommands>>,
 ) {
     if let Some(ground) = grounds.iter().next() {
         for e in ev.read() {
             if e.target == ground && PointerButton::Secondary == e.button {
-                for (selection, entity) in &selecteds {
+                for (selection, &id) in &selecteds {
                     if !selection.is_selected {
                         continue;
                     }
                     if let Some(pos) = e.hit.position {
-                        let event = SelectEvent { pos, entity };
+                        let event = SelectEvent { pos, entity: id };
                         selections.send(event);
                     }
                 }
@@ -194,11 +198,13 @@ fn generate_commands(
 
 fn process_commands(
     mut selections: EventReader<SelectEvent>,
-    mut selecteds: Query<&mut UserCommands>,
+    mut selecteds: Query<(&mut UserCommands, &NetId)>,
 ) {
     for event in selections.read() {
-        if let Ok(mut commands) = selecteds.get_mut(event.entity) {
-            commands.0.push(event.pos);
+        for (mut selection, id) in selecteds.iter_mut() {
+            if event.entity == *id {
+                selection.0.push(event.pos);
+            }
         }
     }
 }
