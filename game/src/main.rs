@@ -8,7 +8,7 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            BasePlugin::new(GameState::InGame),
+            BasePlugin::new(GameState::MainMenu),
             MainMenuPlugin,
             SettingsPlugin,
             InGamePlugin,

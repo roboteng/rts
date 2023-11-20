@@ -12,7 +12,9 @@ impl Plugin for BasePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_state::<GameState>()
             .add_systems(Startup, setup_2d)
-            .insert_resource(MyUiScale::Medium);
+            .insert_resource(MyUiScale::Medium)
+            .add_state::<PlayType>();
+
         let mut k = app
             .world
             .get_resource_mut::<NextState<GameState>>()
@@ -67,6 +69,14 @@ pub enum GameState {
     MainMenu,
     InGame,
     Settings,
+}
+
+#[derive(Debug, Default, States, Hash, PartialEq, Eq, Clone, Copy)]
+enum PlayType {
+    #[default]
+    None,
+    Single,
+    Multi,
 }
 
 #[derive(Reflect, Resource, Clone, Copy, PartialEq)]

@@ -72,15 +72,22 @@ fn draw_main_menu(mut commands: Commands, assets: Res<AssetServer>) {
 fn button_click(
     query: Query<(&Interaction, &MainMenuButton), Changed<Interaction>>,
     mut exit_event: ResMut<Events<AppExit>>,
-    mut states: ResMut<NextState<GameState>>,
+    mut game_state: ResMut<NextState<GameState>>,
+    mut play_type: ResMut<NextState<PlayType>>,
 ) {
     for (interaction, button) in &query {
         if let Interaction::Pressed = interaction {
             match button {
-                MainMenuButton::SinglePlayer => states.set(GameState::InGame),
-                MainMenuButton::Settings => states.set(GameState::Settings),
+                MainMenuButton::SinglePlayer => {
+                    game_state.set(GameState::InGame);
+                    play_type.set(PlayType::Single);
+                }
+                MainMenuButton::MultiPlayer => {
+                    game_state.set(GameState::InGame);
+                    play_type.set(PlayType::Multi);
+                }
+                MainMenuButton::Settings => game_state.set(GameState::Settings),
                 MainMenuButton::Quit => exit_event.send(AppExit),
-                _ => {}
             }
         }
     }
