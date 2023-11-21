@@ -3,6 +3,7 @@ members = [
   # force split
   "ci",
   "game",
+  "game_server",
   "server",
 ]
 resolver = "2"
