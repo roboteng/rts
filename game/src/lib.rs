@@ -77,6 +77,7 @@ enum PlayType {
     None,
     Single,
     Multi,
+    Server,
 }
 
 #[derive(Reflect, Resource, Clone, Copy, PartialEq)]

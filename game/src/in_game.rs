@@ -16,7 +16,10 @@ struct GameLogicPlugin;
 impl Plugin for GameLogicPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame), setup);
-        app.add_systems(Update, (process_user_commands, process_commands));
+        app.add_systems(
+            Update,
+            (process_user_commands, process_commands).run_if(is_host),
+        );
     }
 }
 
@@ -24,10 +27,19 @@ fn is_player(game: Res<State<GameState>>, play: Res<State<PlayType>>) -> bool {
     *game.as_ref().get() == GameState::InGame && *play.as_ref().get() != PlayType::None
 }
 
+fn is_host(play: Res<State<PlayType>>) -> bool {
+    match play.as_ref().get() {
+        PlayType::None => false,
+        PlayType::Single => true,
+        PlayType::Multi => false,
+        PlayType::Server => true,
+    }
+}
+
 struct PlayerGUIPlugin;
 impl Plugin for PlayerGUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::InGame), draw_hud);
+        app.add_systems(OnEnter(GameState::InGame), draw_hud.run_if(is_player));
 
         app.add_systems(
             Update,
