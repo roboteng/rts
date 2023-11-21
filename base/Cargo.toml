@@ -21,3 +21,8 @@ bevy = { version = "0.12.0", features = [
     "tonemapping_luts",
     "default_font",
 ], default-features = false }
+bevy_mod_picking = { version = "0.17.0", default-features = false, features = [
+    "backend_raycast",
+    "selection",
+    "highlight",
+] }
