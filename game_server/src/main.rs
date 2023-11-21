@@ -1,3 +1,4 @@
+use base::*;
 use bevy::prelude::*;
 use game::{in_game::InGamePlugin, *};
 

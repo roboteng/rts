@@ -2,6 +2,7 @@
 members = [
   # force split
   "ci",
+  "base",
   "game",
   "game_server",
   "server",

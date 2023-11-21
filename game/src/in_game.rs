@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 use bevy_ui_dsl::*;
 
-use crate::{GameState, PlayType};
+use base::*;
 
 pub struct InGamePlugin;
 impl Plugin for InGamePlugin {

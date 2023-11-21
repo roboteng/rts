@@ -313,6 +313,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "base"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2031,6 +2038,7 @@ dependencies = [
 name = "game"
 version = "0.1.0"
 dependencies = [
+ "base",
  "bevy",
  "bevy-ui-dsl",
  "bevy_mod_picking",
@@ -2040,6 +2048,7 @@ dependencies = [
 name = "game_server"
 version = "0.1.0"
 dependencies = [
+ "base",
  "bevy",
  "game",
 ]

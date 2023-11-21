@@ -1,3 +1,4 @@
+use base::*;
 use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 use std::fmt::Display;
 
@@ -61,23 +62,6 @@ pub fn teardown<T: Component>(mut commands: Commands, query: Query<Entity, With<
     for e in &query {
         commands.entity(e).despawn_recursive();
     }
-}
-
-#[derive(Debug, Default, Hash, PartialEq, Eq, Clone, Copy, States)]
-pub enum GameState {
-    #[default]
-    MainMenu,
-    InGame,
-    Settings,
-}
-
-#[derive(Debug, Default, States, Hash, PartialEq, Eq, Clone, Copy)]
-enum PlayType {
-    #[default]
-    None,
-    Single,
-    Multi,
-    Server,
 }
 
 #[derive(Reflect, Resource, Clone, Copy, PartialEq)]
