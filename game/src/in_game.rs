@@ -7,23 +7,24 @@ use base::{logic::GameLogicPlugin, *};
 pub struct InGamePlugin;
 impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((DefaultPickingPlugins, GameLogicPlugin, PlayerGUIPlugin))
+        app.add_plugins((DefaultPickingPlugins, GameLogicPlugin, ClientGUIPlugin))
             .add_event::<SelectEvent>();
     }
 }
 
-fn is_player(game: Res<State<GameState>>, play: Res<State<PlayType>>) -> bool {
-    *game.as_ref().get() == GameState::InGame && *play.as_ref().get() != PlayType::None
+fn is_client(game: Res<State<GameState>>, play: Res<State<PlayType>>) -> bool {
+    *game.as_ref().get() == GameState::InGame
+        && (*play.as_ref().get() == PlayType::Single || *play.as_ref().get() == PlayType::Multi)
 }
 
-struct PlayerGUIPlugin;
-impl Plugin for PlayerGUIPlugin {
+struct ClientGUIPlugin;
+impl Plugin for ClientGUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::InGame), draw_hud.run_if(is_player));
+        app.add_systems(OnEnter(GameState::InGame), draw_hud.run_if(is_client));
 
         app.add_systems(
             Update,
-            (show_selection, generate_commands).run_if(is_player),
+            (show_selection, generate_commands).run_if(is_client),
         );
     }
 }
