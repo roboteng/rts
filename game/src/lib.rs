@@ -21,6 +21,9 @@ impl Plugin for BasePlugin {
             .get_resource_mut::<NextState<GameState>>()
             .unwrap();
         k.set(self.0);
+
+        let mut l = app.world.get_resource_mut::<NextState<PlayType>>().unwrap();
+        l.set(self.1);
     }
 }
 
