@@ -6,7 +6,7 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            BasePlugin::new(GameState::MainMenu),
+            BasePlugin::new(GameState::InGame, PlayType::Server),
             InGamePlugin,
         ))
         .run();

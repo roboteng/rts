@@ -8,7 +8,7 @@ pub mod main_menu;
 pub mod settings_page;
 
 #[derive(Default)]
-pub struct BasePlugin(GameState);
+pub struct BasePlugin(GameState, PlayType);
 impl Plugin for BasePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_state::<GameState>()
@@ -25,8 +25,8 @@ impl Plugin for BasePlugin {
 }
 
 impl BasePlugin {
-    pub fn new(init_state: GameState) -> Self {
-        Self(init_state)
+    pub fn new(init_state: GameState, play: PlayType) -> Self {
+        Self(init_state, play)
     }
 }
 
