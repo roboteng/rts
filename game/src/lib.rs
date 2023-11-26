@@ -12,20 +12,19 @@ pub struct BasePlugin(GameState, PlayType);
 impl Plugin for BasePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_state::<GameState>()
-            .add_systems(Startup, setup_2d)
+            .add_state::<PlayType>()
             .insert_resource(MyUiScale::Medium)
-            .add_state::<PlayType>();
+            .add_systems(Startup, setup_2d);
 
-        app.world
-            .get_resource_mut::<NextState<_>>()
-            .unwrap()
-            .set(self.0);
-
-        app.world
-            .get_resource_mut::<NextState<_>>()
-            .unwrap()
-            .set(self.1);
+        set_state(app, self.0).unwrap();
+        set_state(app, self.1).unwrap();
     }
+}
+
+#[must_use]
+fn set_state<T: States>(app: &mut App, state: T) -> Option<()> {
+    app.world.get_resource_mut::<NextState<T>>()?.set(state);
+    Some(())
 }
 
 impl BasePlugin {
