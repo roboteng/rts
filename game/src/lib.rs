@@ -16,14 +16,15 @@ impl Plugin for BasePlugin {
             .insert_resource(MyUiScale::Medium)
             .add_state::<PlayType>();
 
-        let mut k = app
-            .world
-            .get_resource_mut::<NextState<GameState>>()
-            .unwrap();
-        k.set(self.0);
+        app.world
+            .get_resource_mut::<NextState<_>>()
+            .unwrap()
+            .set(self.0);
 
-        let mut l = app.world.get_resource_mut::<NextState<PlayType>>().unwrap();
-        l.set(self.1);
+        app.world
+            .get_resource_mut::<NextState<_>>()
+            .unwrap()
+            .set(self.1);
     }
 }
 
