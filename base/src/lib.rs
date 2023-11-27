@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub mod logic;
 
@@ -35,10 +36,10 @@ pub struct Health {
     pub current: f32,
 }
 
-#[derive(Component, PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(Component, PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct NetId(pub u64);
 
-#[derive(Event)]
+#[derive(Event, Serialize, Deserialize)]
 pub struct SelectEvent {
     pub pos: Vec3,
     pub entity: NetId,

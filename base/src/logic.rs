@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_renet::renet::{ConnectionConfig, DefaultChannel, RenetClient};
 
 use crate::{setup, GameState, NetId, PlayType, SelectEvent, UserCommands};
 
@@ -13,12 +14,36 @@ impl Plugin for GameLogicPlugin {
     }
 }
 
+pub struct MultiplayerClientPlugin;
+impl Plugin for MultiplayerClientPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(RenetClient::new(ConnectionConfig::default()));
+        app.add_systems(Update, send_commands.run_if(is_client));
+    }
+}
+
 fn is_host(play: Res<State<PlayType>>) -> bool {
     match play.as_ref().get() {
         PlayType::None => false,
         PlayType::Single => true,
         PlayType::Multi => false,
         PlayType::Server => true,
+    }
+}
+
+fn is_client(play: Res<State<PlayType>>) -> bool {
+    match play.as_ref().get() {
+        PlayType::None => false,
+        PlayType::Single => false,
+        PlayType::Multi => true,
+        PlayType::Server => false,
+    }
+}
+
+fn send_commands(mut selections: EventReader<SelectEvent>, mut client: ResMut<RenetClient>) {
+    for event in selections.read() {
+        let _ = bincode::serialize(event)
+            .and_then(|message| Ok(client.send_message(DefaultChannel::ReliableOrdered, message)));
     }
 }
 

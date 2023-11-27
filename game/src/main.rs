@@ -1,4 +1,4 @@
-use base::*;
+use base::{logic::MultiplayerClientPlugin, *};
 use bevy::{prelude::App, DefaultPlugins};
 use game::{
     in_game::InGamePlugin, main_menu::MainMenuPlugin, settings_page::SettingsPlugin, BasePlugin,
@@ -12,6 +12,7 @@ fn main() {
             MainMenuPlugin,
             SettingsPlugin,
             InGamePlugin,
+            MultiplayerClientPlugin,
         ))
         .run();
 }
