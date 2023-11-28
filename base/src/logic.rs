@@ -10,7 +10,7 @@ use bevy_renet::{
     RenetClientPlugin,
 };
 
-use crate::{setup, GameState, NetId, PlayType, SelectEvent, UserCommands};
+use crate::{setup, GameState, MoveEvent, NetId, PlayType, UserCommands};
 
 pub struct GameLogicPlugin;
 impl Plugin for GameLogicPlugin {
@@ -66,7 +66,7 @@ fn is_client(play: Res<State<PlayType>>) -> bool {
     }
 }
 
-fn send_commands(mut selections: EventReader<SelectEvent>, mut client: ResMut<RenetClient>) {
+fn send_commands(mut selections: EventReader<MoveEvent>, mut client: ResMut<RenetClient>) {
     for event in selections.read() {
         let _ = bincode::serialize(event)
             .map(|message| client.send_message(DefaultChannel::ReliableOrdered, message));
@@ -74,7 +74,7 @@ fn send_commands(mut selections: EventReader<SelectEvent>, mut client: ResMut<Re
 }
 
 fn process_commands(
-    mut selections: EventReader<SelectEvent>,
+    mut selections: EventReader<MoveEvent>,
     mut selecteds: Query<(&mut UserCommands, &NetId)>,
 ) {
     for event in selections.read() {

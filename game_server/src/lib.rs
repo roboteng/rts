@@ -1,7 +1,7 @@
 use std::net::UdpSocket;
 use std::time::Duration;
 
-use base::SelectEvent;
+use base::MoveEvent;
 use bevy::prelude::*;
 use bevy_renet::renet::transport::{NetcodeServerTransport, ServerAuthentication, ServerConfig};
 use bevy_renet::renet::{ConnectionConfig, DefaultChannel, RenetServer, ServerEvent};
@@ -34,11 +34,11 @@ impl Plugin for ServerPlugin {
     }
 }
 
-fn sys(mut server: ResMut<RenetServer>, mut events: EventWriter<SelectEvent>) {
+fn sys(mut server: ResMut<RenetServer>, mut events: EventWriter<MoveEvent>) {
     for client_id in server.clients_id() {
         let message = server.receive_message(client_id, DefaultChannel::ReliableOrdered);
         if let Some(message) = message {
-            let message: SelectEvent = bincode::deserialize(&message).unwrap();
+            let message: MoveEvent = bincode::deserialize(&message).unwrap();
             events.send(message);
         }
     }

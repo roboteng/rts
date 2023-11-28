@@ -40,7 +40,7 @@ pub struct Health {
 pub struct NetId(pub u64);
 
 #[derive(Event, Serialize, Deserialize)]
-pub struct SelectEvent {
+pub struct MoveEvent {
     pub pos: Vec3,
     pub entity: NetId,
 }

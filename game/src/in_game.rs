@@ -8,7 +8,7 @@ pub struct InGamePlugin;
 impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((DefaultPickingPlugins, GameLogicPlugin, ClientGUIPlugin))
-            .add_event::<SelectEvent>();
+            .add_event::<MoveEvent>();
     }
 }
 
@@ -87,7 +87,7 @@ fn show_selection(
 fn generate_commands(
     grounds: Query<Entity, With<Ground>>,
     mut ev: EventReader<Pointer<Click>>,
-    mut selections: EventWriter<SelectEvent>,
+    mut selections: EventWriter<MoveEvent>,
     selecteds: Query<(&PickSelection, &NetId), With<UserCommands>>,
 ) {
     if let Some(ground) = grounds.iter().next() {
@@ -98,7 +98,7 @@ fn generate_commands(
                         continue;
                     }
                     if let Some(pos) = e.hit.position {
-                        let event = SelectEvent { pos, entity: id };
+                        let event = MoveEvent { pos, entity: id };
                         selections.send(event);
                     }
                 }
