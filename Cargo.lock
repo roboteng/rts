@@ -2111,6 +2111,9 @@ dependencies = [
  "bevy",
  "bevy-ui-dsl",
  "bevy_mod_picking",
+ "bevy_renet",
+ "bincode",
+ "serde",
 ]
 
 [[package]]

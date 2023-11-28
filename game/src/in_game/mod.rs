@@ -4,6 +4,8 @@ use bevy_ui_dsl::*;
 
 use base::{logic::GameLogicPlugin, *};
 
+pub mod multiplayer;
+
 pub struct InGamePlugin;
 impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {

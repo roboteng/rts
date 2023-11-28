@@ -1,7 +1,10 @@
-use base::{logic::MultiplayerClientPlugin, *};
+use base::*;
 use bevy::{prelude::App, DefaultPlugins};
 use game::{
-    in_game::InGamePlugin, main_menu::MainMenuPlugin, settings_page::SettingsPlugin, BasePlugin,
+    in_game::{multiplayer::MultiplayerClientPlugin, InGamePlugin},
+    main_menu::MainMenuPlugin,
+    settings_page::SettingsPlugin,
+    BasePlugin,
 };
 
 fn main() {
