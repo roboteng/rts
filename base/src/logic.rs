@@ -1,5 +1,14 @@
+use std::{net::UdpSocket, time::Duration};
+
 use bevy::prelude::*;
-use bevy_renet::renet::{ConnectionConfig, DefaultChannel, RenetClient};
+use bevy_renet::{
+    renet::{
+        transport::{ClientAuthentication, NetcodeClientTransport},
+        ConnectionConfig, DefaultChannel, RenetClient,
+    },
+    transport::NetcodeClientPlugin,
+    RenetClientPlugin,
+};
 
 use crate::{setup, GameState, NetId, PlayType, SelectEvent, UserCommands};
 
@@ -17,7 +26,24 @@ impl Plugin for GameLogicPlugin {
 pub struct MultiplayerClientPlugin;
 impl Plugin for MultiplayerClientPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(RenetClientPlugin);
+        app.add_plugins(NetcodeClientPlugin);
+
         app.insert_resource(RenetClient::new(ConnectionConfig::default()));
+        app.insert_resource(
+            NetcodeClientTransport::new(
+                Duration::default(),
+                ClientAuthentication::Unsecure {
+                    protocol_id: 1,
+                    client_id: 1,
+                    server_addr: "127.0.0.1:5000".parse().unwrap(),
+                    user_data: None,
+                },
+                UdpSocket::bind("127.0.0.1:0").unwrap(),
+            )
+            .unwrap(),
+        );
+
         app.add_systems(Update, send_commands.run_if(is_client));
     }
 }
