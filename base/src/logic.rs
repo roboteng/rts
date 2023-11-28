@@ -1,14 +1,4 @@
-use std::{net::UdpSocket, time::Duration};
-
 use bevy::prelude::*;
-use bevy_renet::{
-    renet::{
-        transport::{ClientAuthentication, NetcodeClientTransport},
-        ConnectionConfig, DefaultChannel, RenetClient,
-    },
-    transport::NetcodeClientPlugin,
-    RenetClientPlugin,
-};
 
 use crate::{setup, GameState, MoveEvent, NetId, PlayType, UserCommands};
 
