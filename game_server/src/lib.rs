@@ -1,7 +1,7 @@
 use std::net::UdpSocket;
 use std::time::Duration;
 
-use base::MoveEvent;
+use base::{MoveEvent, NetId};
 use bevy::prelude::*;
 use bevy_renet::renet::transport::{NetcodeServerTransport, ServerAuthentication, ServerConfig};
 use bevy_renet::renet::{ConnectionConfig, DefaultChannel, RenetServer, ServerEvent};
@@ -30,11 +30,12 @@ impl Plugin for ServerPlugin {
         app.insert_resource(transport);
         app.insert_resource(server);
 
-        app.add_systems(Update, (sys, sys2));
+        app.add_systems(Update, (read_move_events, read_server_events));
+        app.add_systems(PostUpdate, send_move_updates);
     }
 }
 
-fn sys(mut server: ResMut<RenetServer>, mut events: EventWriter<MoveEvent>) {
+fn read_move_events(mut server: ResMut<RenetServer>, mut events: EventWriter<MoveEvent>) {
     for client_id in server.clients_id() {
         let message = server.receive_message(client_id, DefaultChannel::ReliableOrdered);
         if let Some(message) = message {
@@ -44,7 +45,7 @@ fn sys(mut server: ResMut<RenetServer>, mut events: EventWriter<MoveEvent>) {
     }
 }
 
-fn sys2(mut server_events: EventReader<ServerEvent>) {
+fn read_server_events(mut server_events: EventReader<ServerEvent>) {
     for event in server_events.read() {
         match event {
             ServerEvent::ClientConnected { client_id } => {
@@ -54,5 +55,20 @@ fn sys2(mut server_events: EventReader<ServerEvent>) {
                 println!("Player {} disconnected: {}", client_id, reason);
             }
         }
+    }
+}
+
+fn send_move_updates(
+    moves: Query<(&Transform, &NetId), Changed<Transform>>,
+    mut server: ResMut<RenetServer>,
+) {
+    for m in &moves {
+        println!("sending update");
+        let message = MoveEvent {
+            pos: m.0.translation,
+            entity: *m.1,
+        };
+        let message = bincode::serialize(&message).unwrap();
+        server.broadcast_message(DefaultChannel::ReliableOrdered, message);
     }
 }
