@@ -44,7 +44,18 @@ impl Plugin for MultiplayerClientPlugin {
             .unwrap(),
         );
 
-        app.add_systems(Update, send_commands.run_if(is_client));
+        app.add_systems(
+            Update,
+            (send_commands, take_server_messages).run_if(is_client),
+        );
+    }
+}
+
+fn take_server_messages(mut q: Query<(&mut Transform, &NetId)>, mut client: ResMut<RenetClient>) {
+    if let Some(k) = client.receive_message(DefaultChannel::ReliableOrdered) {
+        let message: MoveEvent = bincode::deserialize(&k).unwrap();
+        let mut k = q.iter_mut().find(|m| m.1 == &message.entity).unwrap();
+        k.0.translation = message.pos;
     }
 }
 
