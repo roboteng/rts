@@ -69,7 +69,7 @@ fn is_client(play: Res<State<PlayType>>) -> bool {
 fn send_commands(mut selections: EventReader<SelectEvent>, mut client: ResMut<RenetClient>) {
     for event in selections.read() {
         let _ = bincode::serialize(event)
-            .and_then(|message| Ok(client.send_message(DefaultChannel::ReliableOrdered, message)));
+            .map(|message| client.send_message(DefaultChannel::ReliableOrdered, message));
     }
 }
 

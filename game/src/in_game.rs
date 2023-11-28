@@ -15,11 +15,10 @@ impl Plugin for InGamePlugin {
 fn is_client(game: Res<State<GameState>>, play: Res<State<PlayType>>) -> bool {
     let k = (*game.as_ref().get(), *play.as_ref().get());
 
-    match k {
-        (GameState::InGame, PlayType::Single) => true,
-        (GameState::InGame, PlayType::Multi) => true,
-        _ => false,
-    }
+    matches!(
+        k,
+        (GameState::InGame, PlayType::Single) | (GameState::InGame, PlayType::Multi)
+    )
 }
 
 struct ClientGUIPlugin;
