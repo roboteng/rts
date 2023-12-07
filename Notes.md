@@ -91,6 +91,8 @@ Guest
 - Then Bob is a Guest
 - And Bob is not be able to change the number  of players to 3
 
+---
+
 ## Code Organization for multi/single player
 
 I'd like to have different groups for the different game modes.
@@ -128,3 +130,82 @@ It would take events emitted from the game logic, and perform game state changes
 After refactoring a `bevy_renet` example and some thought, I think I know how I want to set up these `Plugin`s. The main plugin will hold the game logic. This will take events/world queries as inputs, and change the state of the world. In the case of a single player game, nothing needs to be done to inform the player, since it will be in the same world, and the render will give all the information to the player. In the case of a multiplayer game, there will be a plugin that has queries, (mostly queries with a `Changed<_>` part). These changes can get sent over the network, and then replicated on the client side.
 
 As far as getting user input to the game logic, we can have one player input component that converts keyboard/mouse events into game input events. We can then have to kinds of components that take game input events as input. One would convert those directly to world updates that the game logic would detect, and the other would be a pair of components to send and receive those events over the network in multiplayer scenario.
+
+## Testing Considerations
+
+Some ways I've thought of more effectively testing the code, depending on the situation.
+
+### Unit Tests
+
+Systems could be simple enough where the system basically calls a function in a loop, we could then unit test the inner function. Here's an example:
+
+```rust
+fn our_system(
+    query_a: Query<&AComp>,
+    query_b: Query<&BComp>,
+    events: EventWriter<MyEvent>,
+) {
+	for a in query_a {
+	    for b in query_b {
+	        if let Some(event) = system_inner(a,b) {
+	            events.send(event);
+	        }
+	    }
+	}
+}
+
+fn system_inner(a: &AComp, b: &BComp) -> Option<MyEvent>{
+    if ... {
+        // do stuff
+        Some(MyEvent::new(...))
+    } else {
+        None
+    }
+}
+
+#[test]
+fn test_our_system() {
+    let a = AComp {...};
+    let b = BComp {...};
+
+    let actual = system_inner(&a, &b);
+
+    assert_eq(actual, Some(MyEvent::new()));
+}
+```
+
+I might have a few different kinds of tests like these, depending on the types, but I think the structure should be helpful.
+
+No matter what, I would expect that bevy is not used in these tests. It might be quick enough if we include bevy, but there are a lot of extra dependencies that we'd need for each test.
+
+### Integration Tests
+
+I expect we will start to use bevy in these tests. My thought is that we only interact with the plugin that we add through events. We add any relevant  plugins and events, and send in events, and listen for the correct event coming out. I don't have as clear of an idea as to how this test will be specifically written though. Maybe something like this:
+
+```rust
+#[test]
+fn sample_test() {
+    // arrange
+    let mut app = App::new()
+        .add_plugins((BasePlugin, LogicPlugin));
+
+    let mut create_units = app.get_resource::<Events<CreateUnits>>().unwrap();
+    create_units.send(CreateUnit::villager(0, 0, 0));
+
+    let mut create_units = app.get_resource::<Events<CreateUnits>>().unwrap();
+    create_units.send(CreateUnit::GoldMine(1, 0, 1));
+
+    // act
+    let mut input_events = app.get_resource::<Events<InputEvent>>().unwrap();
+    input_events.send(InputEvent::new());
+
+    app.update(); // probably some kind of auto wait here
+                  // maybe read events and update in a loop to finish as soon as possible?
+
+    // assert
+    let mut output_event = app.get_resource::<Events<OutPutEvent>>().unwrap();
+    let actual = output_event.read();
+
+    assert_aq(actual, OutputEvent::new());
+}
+```
