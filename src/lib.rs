@@ -5,24 +5,40 @@ impl Plugin for CoreLogicPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnUnit>();
 
-        app.add_systems(Update, foo);
+        app.add_systems(Update, spawn_units);
     }
 }
 
-fn foo(mut creations: EventReader<SpawnUnit>, mut commands: Commands) {
+fn spawn_units(mut creations: EventReader<SpawnUnit>, mut commands: Commands) {
     for spawn in creations.read() {
-        match spawn {
-            SpawnUnit::Villager(entity, pos) => commands.entity(*entity).insert(Transform {
-                translation: Vec3::new(pos.x, pos.y, 0.0),
-                ..Default::default()
-            }),
-        };
+        let bundle = inner_foo(spawn);
+        commands.entity(spawn.target).insert(bundle);
+    }
+}
+
+fn inner_foo(spawn: &SpawnUnit) -> impl Bundle {
+    Transform {
+        translation: Vec3::new(spawn.pos.x, spawn.pos.y, 0.0),
+        ..Default::default()
     }
 }
 
 #[derive(Debug, Event)]
-enum SpawnUnit {
-    Villager(Entity, Vec2),
+struct SpawnUnit {
+    target: Entity,
+    pos: Vec2,
+    unit: Unit,
+}
+
+#[derive(Debug)]
+enum Unit {
+    Villager,
+}
+
+impl SpawnUnit {
+    pub fn new(target: Entity, pos: Vec2, unit: Unit) -> Self {
+        Self { target, pos, unit }
+    }
 }
 
 #[derive(Debug, Event)]
@@ -48,7 +64,8 @@ mod test {
             let ent = app.world.spawn_empty().id();
 
             let init_pos = Vec2::new(1.0, 1.0);
-            app.world.send_event(SpawnUnit::Villager(ent, init_pos));
+            app.world
+                .send_event(SpawnUnit::new(ent, init_pos, Unit::Villager));
 
             // act
             let goal_pos = Vec2::new(0.0, 0.0);
