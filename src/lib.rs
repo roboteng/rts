@@ -56,22 +56,39 @@ mod test {
             app.update();
 
             // assert
+            assert_timeout(
+                &mut app,
+                |app| {
+                    let actual = app.world.get::<Transform>(ent).unwrap();
+                    actual.translation.length() < init_pos.length()
+                },
+                "Villager didn't move closer to the goal",
+            );
+        }
+
+        fn assert_timeout(
+            app: &mut App,
+            success_condition: impl Fn(&App) -> bool,
+            failure_message: &'static str,
+        ) {
             loop {
                 {
-                    let actual = app.world.get::<Transform>(ent).unwrap();
-                    if actual.translation.length() < init_pos.length() {
+                    if success_condition(app) {
                         break;
                     }
                 }
-
-                let mut time = app.world.get_resource_mut::<Time<Virtual>>();
-                let time = time.as_mut().unwrap();
-                time.advance_by(Duration::from_millis(16));
-                if time.elapsed_seconds() > 5.0 {
-                    panic!("Villager didn't move closer to the goal")
-                }
-                app.update();
+                timeout(app, failure_message);
             }
+        }
+
+        fn timeout(app: &mut App, message: &'static str) {
+            let mut time = app.world.get_resource_mut::<Time<Virtual>>();
+            let time = time.as_mut().unwrap();
+            time.advance_by(Duration::from_millis(16));
+            if time.elapsed() > Duration::from_secs(5) {
+                panic!("{}", message);
+            }
+            app.update();
         }
     }
 }
