@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::bundle::DynamicBundle, prelude::*};
 
 struct CoreLogicPlugin;
 impl Plugin for CoreLogicPlugin {
@@ -11,21 +11,37 @@ impl Plugin for CoreLogicPlugin {
 
 fn spawn_units(mut creations: EventReader<SpawnUnit>, mut commands: Commands) {
     for spawn in creations.read() {
-        let bundle = inner_foo(spawn);
+        let bundle = create_unit_bundles(&spawn.data);
         commands.entity(spawn.target).insert(bundle);
     }
 }
 
-fn inner_foo(spawn: &SpawnUnit) -> impl Bundle {
-    Transform {
+#[derive(Component)]
+enum UnitComponents {
+    Villager,
+}
+
+fn create_unit_bundles(spawn: &SpawnUnitData) -> (Transform, UnitComponents) {
+    let transform = Transform {
         translation: Vec3::new(spawn.pos.x, spawn.pos.y, 0.0),
         ..Default::default()
-    }
+    };
+
+    let rest = match spawn.unit {
+        Unit::Villager => UnitComponents::Villager,
+    };
+
+    (transform, rest)
 }
 
 #[derive(Debug, Event)]
 struct SpawnUnit {
     target: Entity,
+    data: SpawnUnitData,
+}
+
+#[derive(Debug)]
+struct SpawnUnitData {
     pos: Vec2,
     unit: Unit,
 }
@@ -36,8 +52,8 @@ enum Unit {
 }
 
 impl SpawnUnit {
-    pub fn new(target: Entity, pos: Vec2, unit: Unit) -> Self {
-        Self { target, pos, unit }
+    pub fn new(target: Entity, data: SpawnUnitData) -> Self {
+        Self { target, data }
     }
 }
 
@@ -49,11 +65,27 @@ enum PlayerCommand {
 #[cfg(test)]
 mod test {
     use super::*;
+    mod unit_test {
+        use super::*;
+
+        #[test]
+        fn transfor_gets_created() {
+            let actual = create_unit_bundles(&SpawnUnitData {
+                pos: Vec2 { x: 3.0, y: 4.0 },
+                unit: Unit::Villager,
+            });
+            let (actual, _) = actual;
+
+            assert_eq!(Vec3::new(3.0, 4.0, 0.0), actual.translation);
+        }
+    }
+
     mod acceptance {
         use std::time::Duration;
 
         use super::*;
 
+        #[ignore = "In dev"]
         #[test]
         fn move_a_villager() {
             // arrange
@@ -64,8 +96,13 @@ mod test {
             let ent = app.world.spawn_empty().id();
 
             let init_pos = Vec2::new(1.0, 1.0);
-            app.world
-                .send_event(SpawnUnit::new(ent, init_pos, Unit::Villager));
+            app.world.send_event(SpawnUnit::new(
+                ent,
+                SpawnUnitData {
+                    pos: init_pos,
+                    unit: Unit::Villager,
+                },
+            ));
 
             // act
             let goal_pos = Vec2::new(0.0, 0.0);
