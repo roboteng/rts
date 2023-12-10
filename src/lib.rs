@@ -1,4 +1,4 @@
-use bevy::{ecs::bundle::DynamicBundle, prelude::*};
+use bevy::prelude::*;
 
 struct CoreLogicPlugin;
 impl Plugin for CoreLogicPlugin {
@@ -21,17 +21,13 @@ enum UnitComponents {
     Villager,
 }
 
-fn create_unit_bundles(spawn: &SpawnUnitData) -> (Transform, UnitComponents) {
+fn create_unit_bundles(spawn: &SpawnUnitData) -> Transform {
     let transform = Transform {
         translation: Vec3::new(spawn.pos.x, spawn.pos.y, 0.0),
         ..Default::default()
     };
 
-    let rest = match spawn.unit {
-        Unit::Villager => UnitComponents::Villager,
-    };
-
-    (transform, rest)
+    transform
 }
 
 #[derive(Debug, Event)]
@@ -74,7 +70,6 @@ mod test {
                 pos: Vec2 { x: 3.0, y: 4.0 },
                 unit: Unit::Villager,
             });
-            let (actual, _) = actual;
 
             assert_eq!(Vec3::new(3.0, 4.0, 0.0), actual.translation);
         }
