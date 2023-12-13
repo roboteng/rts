@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-struct CoreLogicPlugin;
+pub struct CoreLogicPlugin;
 impl Plugin for CoreLogicPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnUnit>();
@@ -18,16 +18,15 @@ fn spawn_units(mut creations: EventReader<SpawnUnit>, mut commands: Commands) {
 
 #[derive(Component)]
 enum UnitComponents {
+    #[allow(unused)]
     Villager,
 }
 
 fn create_unit_bundles(spawn: &SpawnUnitData) -> Transform {
-    let transform = Transform {
+    Transform {
         translation: Vec3::new(spawn.pos.x, spawn.pos.y, 0.0),
         ..Default::default()
-    };
-
-    transform
+    }
 }
 
 #[derive(Debug, Event)]
@@ -39,15 +38,18 @@ struct SpawnUnit {
 #[derive(Debug)]
 struct SpawnUnitData {
     pos: Vec2,
+    #[allow(unused)]
     unit: Unit,
 }
 
 #[derive(Debug)]
 enum Unit {
+    #[allow(unused)]
     Villager,
 }
 
 impl SpawnUnit {
+    #[allow(unused)]
     pub fn new(target: Entity, data: SpawnUnitData) -> Self {
         Self { target, data }
     }
@@ -55,6 +57,7 @@ impl SpawnUnit {
 
 #[derive(Debug, Event)]
 enum PlayerCommand {
+    #[allow(unused)]
     Move(Entity, Vec2),
 }
 
