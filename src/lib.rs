@@ -4,8 +4,10 @@ pub struct CoreLogicPlugin;
 impl Plugin for CoreLogicPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnUnit>();
+        app.add_event::<PlayerCommand>();
 
-        app.add_systems(Update, spawn_units);
+        app.add_systems(PreUpdate, spawn_units);
+        app.add_systems(Update, give_commands);
     }
 }
 
@@ -15,6 +17,25 @@ fn spawn_units(mut creations: EventReader<SpawnUnit>, mut commands: Commands) {
         commands.entity(spawn.target).insert(bundle);
     }
 }
+
+fn give_commands(
+    mut incoming_commands: EventReader<PlayerCommand>,
+    mut query: Query<(&mut UserCommandComponent, &mut Transform)>,
+) {
+    for comm in incoming_commands.read() {
+        match comm {
+            PlayerCommand::Move(entity, pos) => {
+                if let Ok((_, mut transform)) = query.get_mut(*entity) {
+                    let transform = transform.as_mut();
+
+                    transform.translation.x = pos.x;
+                    transform.translation.y = pos.y;
+                }
+            }
+        }
+    }
+}
+
 #[derive(Bundle)]
 struct MyBundle {
     transform: Transform,
@@ -104,6 +125,9 @@ mod test {
 
             assert_eq!(UserCommandComponent::default(), actual.commands);
         }
+
+        #[test]
+        fn assign_commands() {}
     }
 
     mod acceptance {
@@ -111,7 +135,7 @@ mod test {
 
         use super::*;
 
-        #[ignore = "In dev"]
+        // #[ignore = "In dev"]
         #[test]
         fn move_a_villager() {
             // arrange
