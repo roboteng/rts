@@ -15,6 +15,10 @@ fn spawn_units(mut creations: EventReader<SpawnUnit>, mut commands: Commands) {
         commands.entity(spawn.target).insert(bundle);
     }
 }
+#[derive(Bundle)]
+struct MyBundle {
+    transform: Transform,
+}
 
 #[derive(Component)]
 enum UnitComponents {
@@ -22,11 +26,13 @@ enum UnitComponents {
     Villager,
 }
 
-fn create_unit_bundles(spawn: &SpawnUnitData) -> Transform {
-    Transform {
+fn create_unit_bundles(spawn: &SpawnUnitData) -> MyBundle {
+    let transform = Transform {
         translation: Vec3::new(spawn.pos.x, spawn.pos.y, 0.0),
         ..Default::default()
-    }
+    };
+
+    MyBundle { transform }
 }
 
 #[derive(Debug, Event)]
@@ -74,7 +80,7 @@ mod test {
                 unit: Unit::Villager,
             });
 
-            assert_eq!(Vec3::new(3.0, 4.0, 0.0), actual.translation);
+            assert_eq!(Vec3::new(3.0, 4.0, 0.0), actual.transform.translation);
         }
     }
 
