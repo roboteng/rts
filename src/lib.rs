@@ -3,101 +3,91 @@ use bevy::prelude::*;
 pub struct CoreLogicPlugin;
 impl Plugin for CoreLogicPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<SpawnUnit>();
-        app.add_event::<PlayerCommand>();
+        app.add_event::<SpawnVillager>();
+        app.add_event::<MoveToCommand>();
 
-        app.add_systems(PreUpdate, spawn_units);
+        app.add_systems(PreUpdate, spawn_villagers);
         app.add_systems(Update, give_commands);
     }
 }
 
-fn spawn_units(mut creations: EventReader<SpawnUnit>, mut commands: Commands) {
+fn spawn_villagers(mut creations: EventReader<SpawnVillager>, mut commands: Commands) {
     for spawn in creations.read() {
-        let bundle = create_unit_bundles(&spawn.data);
+        let bundle = spawn.data.to_bundle();
         commands.entity(spawn.target).insert(bundle);
     }
 }
 
 fn give_commands(
-    mut incoming_commands: EventReader<PlayerCommand>,
-    mut query: Query<(&mut UserCommandComponent, &mut Transform)>,
+    mut incoming_commands: EventReader<MoveToCommand>,
+    mut query: Query<(&mut UnitCommandsComponent, &mut Transform)>,
 ) {
     for comm in incoming_commands.read() {
-        match comm {
-            PlayerCommand::Move(entity, pos) => {
-                if let Ok((_, mut transform)) = query.get_mut(*entity) {
-                    let transform = transform.as_mut();
+        let MoveToCommand {
+            target,
+            destination,
+        } = comm;
+        if let Ok((_, mut transform)) = query.get_mut(*target) {
+            let transform = transform.as_mut();
 
-                    transform.translation.x = pos.x;
-                    transform.translation.y = pos.y;
-                }
-            }
+            transform.translation.x = destination.x;
+            transform.translation.y = destination.y;
         }
     }
 }
 
 #[derive(Bundle)]
-struct MyBundle {
+struct VillagerBundle {
     transform: Transform,
-    commands: UserCommandComponent,
-}
-
-#[derive(Component)]
-enum UnitComponents {
-    #[allow(unused)]
-    Villager,
+    commands: UnitCommandsComponent,
 }
 
 #[derive(Component, Debug, Default, PartialEq, Eq)]
-struct UserCommandComponent {
+struct UnitCommandsComponent {
     command: Option<UserCommand>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 enum UserCommand {}
 
-fn create_unit_bundles(spawn: &SpawnUnitData) -> MyBundle {
-    let transform = Transform {
-        translation: Vec3::new(spawn.pos.x, spawn.pos.y, 0.0),
-        ..Default::default()
-    };
-
-    MyBundle {
-        transform,
-        commands: UserCommandComponent::default(),
-    }
-}
-
 #[derive(Debug, Event)]
-struct SpawnUnit {
+struct SpawnVillager {
     target: Entity,
-    data: SpawnUnitData,
+    data: SpawnVillagerData,
 }
 
 #[derive(Debug)]
-struct SpawnUnitData {
+struct SpawnVillagerData {
     pos: Vec2,
-    #[allow(unused)]
-    unit: Unit,
 }
 
-#[derive(Debug)]
-enum Unit {
-    #[allow(unused)]
-    Villager,
-}
+impl SpawnVillagerData {
+    fn to_bundle(&self) -> VillagerBundle {
+        let transform = Transform {
+            translation: Vec3::new(self.pos.x, self.pos.y, 0.0),
+            ..Default::default()
+        };
 
-impl SpawnUnit {
-    #[allow(unused)]
-    pub fn new(target: Entity, data: SpawnUnitData) -> Self {
-        Self { target, data }
+        VillagerBundle {
+            transform,
+            commands: UnitCommandsComponent::default(),
+        }
     }
 }
 
 #[derive(Debug, Event)]
-enum PlayerCommand {
-    #[allow(unused)]
-    Move(Entity, Vec2),
+struct MoveToCommand {
+    target: Entity,
+    destination: Vec2,
+}
+
+impl MoveToCommand {
+    pub fn new(target: Entity, destination: Vec2) -> Self {
+        Self {
+            target,
+            destination,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -108,22 +98,22 @@ mod test {
 
         #[test]
         fn transfor_gets_created() {
-            let actual = create_unit_bundles(&SpawnUnitData {
+            let actual = &SpawnVillagerData {
                 pos: Vec2 { x: 3.0, y: 4.0 },
-                unit: Unit::Villager,
-            });
+            }
+            .to_bundle();
 
             assert_eq!(Vec3::new(3.0, 4.0, 0.0), actual.transform.translation);
         }
 
         #[test]
         fn user_commands_get_created() {
-            let actual = create_unit_bundles(&SpawnUnitData {
+            let actual = &SpawnVillagerData {
                 pos: Vec2::default(),
-                unit: Unit::Villager,
-            });
+            }
+            .to_bundle();
 
-            assert_eq!(UserCommandComponent::default(), actual.commands);
+            assert_eq!(UnitCommandsComponent::default(), actual.commands);
         }
 
         #[test]
@@ -135,7 +125,6 @@ mod test {
 
         use super::*;
 
-        // #[ignore = "In dev"]
         #[test]
         fn move_a_villager() {
             // arrange
@@ -146,25 +135,24 @@ mod test {
             let ent = app.world.spawn_empty().id();
 
             let init_pos = Vec2::new(1.0, 1.0);
-            app.world.send_event(SpawnUnit::new(
-                ent,
-                SpawnUnitData {
-                    pos: init_pos,
-                    unit: Unit::Villager,
-                },
-            ));
+            app.world.send_event(SpawnVillager {
+                target: ent,
+                data: SpawnVillagerData { pos: init_pos },
+            });
 
             // act
             let goal_pos = Vec2::new(0.0, 0.0);
-            app.world.send_event(PlayerCommand::Move(ent, goal_pos));
-            app.update();
+            app.world.send_event(MoveToCommand::new(ent, goal_pos));
 
             // assert
             assert_timeout(
                 &mut app,
                 |app| {
-                    let actual = app.world.get::<Transform>(ent).unwrap();
-                    actual.translation.length() < init_pos.length()
+                    if let Some(actual) = app.world.get::<Transform>(ent) {
+                        actual.translation.length() < init_pos.length()
+                    } else {
+                        false
+                    }
                 },
                 "Villager didn't move closer to the goal",
             );
