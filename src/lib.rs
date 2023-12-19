@@ -36,9 +36,8 @@ fn give_commands(
     }
 }
 
-fn move_units(mut q: Query<(&mut UnitCommandsComponent, &mut Transform)>, time: Res<Time>) {
-    let speed = 5.0;
-    for (mut cmds, mut transform) in q.iter_mut() {
+fn move_units(mut q: Query<(&mut UnitCommandsComponent, &mut Transform, &Speed)>, time: Res<Time>) {
+    for (mut cmds, mut transform, speed) in q.iter_mut() {
         match cmds.as_mut().command {
             Some(UnitCommand::MoveTo(pos)) => {
                 let delta = Vec3::new(
@@ -46,7 +45,7 @@ fn move_units(mut q: Query<(&mut UnitCommandsComponent, &mut Transform)>, time: 
                     pos.y - transform.translation.y,
                     0.0,
                 );
-                transform.translation += delta * time.delta_seconds() * speed;
+                transform.translation += delta.normalize() * time.delta_seconds() * speed.0;
             }
             None => {}
         };
@@ -57,6 +56,7 @@ fn move_units(mut q: Query<(&mut UnitCommandsComponent, &mut Transform)>, time: 
 struct VillagerBundle {
     transform: Transform,
     commands: UnitCommandsComponent,
+    speed: Speed,
 }
 
 #[derive(Component, Debug, Default, PartialEq)]
@@ -69,15 +69,18 @@ enum UnitCommand {
     MoveTo(Vec2),
 }
 
+#[derive(Component)]
+pub struct Speed(f32);
+
 #[derive(Debug, Event)]
-struct SpawnVillager {
-    target: Entity,
-    data: SpawnVillagerData,
+pub struct SpawnVillager {
+    pub target: Entity,
+    pub data: SpawnVillagerData,
 }
 
 #[derive(Debug)]
-struct SpawnVillagerData {
-    pos: Vec2,
+pub struct SpawnVillagerData {
+    pub pos: Vec2,
 }
 
 impl SpawnVillagerData {
@@ -90,14 +93,15 @@ impl SpawnVillagerData {
         VillagerBundle {
             transform,
             commands: UnitCommandsComponent::default(),
+            speed: Speed(5.0),
         }
     }
 }
 
 #[derive(Debug, Event)]
-struct MoveToCommand {
-    target: Entity,
-    destination: Vec2,
+pub struct MoveToCommand {
+    pub target: Entity,
+    pub destination: Vec2,
 }
 
 impl MoveToCommand {
