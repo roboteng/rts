@@ -7,7 +7,7 @@ impl Plugin for CoreLogicPlugin {
         app.add_event::<MoveToCommand>();
 
         app.add_systems(PreUpdate, spawn_villagers);
-        app.add_systems(Update, give_commands);
+        app.add_systems(Update, (give_commands, move_units));
     }
 }
 
@@ -20,19 +20,36 @@ fn spawn_villagers(mut creations: EventReader<SpawnVillager>, mut commands: Comm
 
 fn give_commands(
     mut incoming_commands: EventReader<MoveToCommand>,
-    mut query: Query<(&mut UnitCommandsComponent, &mut Transform)>,
+    mut query: Query<&mut UnitCommandsComponent>,
 ) {
     for comm in incoming_commands.read() {
         let MoveToCommand {
             target,
             destination,
         } = comm;
-        if let Ok((_, mut transform)) = query.get_mut(*target) {
-            let transform = transform.as_mut();
-
-            transform.translation.x = destination.x;
-            transform.translation.y = destination.y;
+        if let Ok(mut unit_commands) = query.get_mut(*target) {
+            let k = unit_commands.as_mut();
+            *k = UnitCommandsComponent {
+                command: Some(UnitCommand::MoveTo(*destination)),
+            };
         }
+    }
+}
+
+fn move_units(mut q: Query<(&mut UnitCommandsComponent, &mut Transform)>, time: Res<Time>) {
+    let speed = 5.0;
+    for (mut cmds, mut transform) in q.iter_mut() {
+        match cmds.as_mut().command {
+            Some(UnitCommand::MoveTo(pos)) => {
+                let delta = Vec3::new(
+                    pos.x - transform.translation.x,
+                    pos.y - transform.translation.y,
+                    0.0,
+                );
+                transform.translation += delta * time.delta_seconds() * speed;
+            }
+            None => {}
+        };
     }
 }
 
@@ -42,13 +59,15 @@ struct VillagerBundle {
     commands: UnitCommandsComponent,
 }
 
-#[derive(Component, Debug, Default, PartialEq, Eq)]
+#[derive(Component, Debug, Default, PartialEq)]
 struct UnitCommandsComponent {
-    command: Option<UserCommand>,
+    command: Option<UnitCommand>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-enum UserCommand {}
+#[derive(Debug, PartialEq)]
+enum UnitCommand {
+    MoveTo(Vec2),
+}
 
 #[derive(Debug, Event)]
 struct SpawnVillager {
