@@ -69,30 +69,30 @@ enum Step {
     Stop(Vec3),
 }
 
-fn next_step(_current: Vec3, _goal: Vec3, step: Vec3) -> Step {
-    Step::Continue(step)
+fn next_step(current: Vec3, goal: Vec3, max_step: f32) -> Step {
+    let delta = goal - current;
+    if delta.length() > max_step {
+        Step::Continue(delta.normalize() * max_step + current)
+    } else {
+        Step::Stop(goal)
+    }
 }
 
 fn move_units(mut q: Query<(&mut UnitCommandsComponent, &mut Transform, &Speed)>, time: Res<Time>) {
     for (mut cmds, mut transform, speed) in q.iter_mut() {
         match cmds.as_mut().command {
             Some(UnitCommand::MoveTo(pos)) => {
-                let delta = Vec3::new(
-                    pos.x - transform.translation.x,
-                    pos.y - transform.translation.y,
-                    0.0,
-                );
                 match next_step(
                     transform.translation,
                     pos.to_vec3(),
-                    delta.normalize() * time.delta_seconds() * speed.0,
+                    time.delta_seconds() * speed.0,
                 ) {
-                    Step::Continue(pos) => {
-                        transform.translation = pos;
+                    Step::Continue(step) => {
+                        transform.translation = step;
                     }
-                    Step::Stop(pos) => {
+                    Step::Stop(step) => {
                         cmds.command = None;
-                        transform.translation = pos;
+                        transform.translation = step;
                     }
                 }
             }
@@ -189,13 +189,27 @@ mod test {
         }
 
         #[test]
-        fn step_from_far_away() {
-            let cases = &[(Vec3::X * 10.0, Vec3::X, Step::Continue(Vec3::X))];
+        fn test_next_step_from_zero() {
+            let cases = &[
+                (Vec3::X * 10.0, 1.0, Step::Continue(Vec3::X)),
+                (Vec3::X, 1.0, Step::Stop(Vec3::X)),
+                (Vec3::X, 2.0, Step::Stop(Vec3::X)),
+            ];
             cases.iter().for_each(|(goal, step, expected)| {
                 let actual = next_step(Vec3::ZERO, *goal, *step);
 
                 assert_eq!(actual, *expected);
             });
+        }
+
+        #[test]
+        fn test_next_step_from_x() {
+            let goal = Vec3::X + Vec3::Y;
+            let current = Vec3::X;
+            let actual = next_step(current, goal, 1.0);
+            let expected = Step::Stop(goal);
+
+            assert_eq!(actual, expected);
         }
     }
 

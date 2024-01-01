@@ -63,7 +63,7 @@ fn handle_input(
         if let Some(entity) = entities.iter().next() {
             events.send(MoveToCommand {
                 target: entity,
-                destination: Vec2::new(5.0, 5.0),
+                destination: Vec2::new(0.0, 5.0),
             })
         }
     }
