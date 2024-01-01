@@ -36,6 +36,43 @@ fn give_commands(
     }
 }
 
+trait Vec3Extension {
+    fn to_vec2(&self) -> Vec2;
+}
+
+trait Vec2Extension {
+    fn to_vec3(&self) -> Vec3;
+}
+
+impl Vec3Extension for Vec3 {
+    fn to_vec2(&self) -> Vec2 {
+        Vec2 {
+            x: self.x,
+            y: self.y,
+        }
+    }
+}
+
+impl Vec2Extension for Vec2 {
+    fn to_vec3(&self) -> Vec3 {
+        Vec3 {
+            x: self.x,
+            y: self.y,
+            z: 0.0,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+enum Step {
+    Continue(Vec3),
+    Stop(Vec3),
+}
+
+fn next_step(_current: Vec3, _goal: Vec3, step: Vec3) -> Step {
+    Step::Continue(step)
+}
+
 fn move_units(mut q: Query<(&mut UnitCommandsComponent, &mut Transform, &Speed)>, time: Res<Time>) {
     for (mut cmds, mut transform, speed) in q.iter_mut() {
         match cmds.as_mut().command {
@@ -45,7 +82,19 @@ fn move_units(mut q: Query<(&mut UnitCommandsComponent, &mut Transform, &Speed)>
                     pos.y - transform.translation.y,
                     0.0,
                 );
-                transform.translation += delta.normalize() * time.delta_seconds() * speed.0;
+                match next_step(
+                    transform.translation,
+                    pos.to_vec3(),
+                    delta.normalize() * time.delta_seconds() * speed.0,
+                ) {
+                    Step::Continue(pos) => {
+                        transform.translation = pos;
+                    }
+                    Step::Stop(pos) => {
+                        cmds.command = None;
+                        transform.translation = pos;
+                    }
+                }
             }
             None => {}
         };
@@ -120,7 +169,7 @@ mod test {
         use super::*;
 
         #[test]
-        fn transfor_gets_created() {
+        fn transform_gets_created() {
             let actual = &SpawnVillagerData {
                 pos: Vec2 { x: 3.0, y: 4.0 },
             }
@@ -140,7 +189,15 @@ mod test {
         }
 
         #[test]
-        fn assign_commands() {}
+        fn step_from_far_away() {
+            let goal = 10.0 * Vec3::X;
+            let step = Vec3::X;
+            let actual = next_step(Vec3::ZERO, goal, step);
+
+            let expected = Step::Continue(step);
+
+            assert_eq!(actual, expected);
+        }
     }
 
     mod acceptance {
