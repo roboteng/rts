@@ -190,13 +190,12 @@ mod test {
 
         #[test]
         fn step_from_far_away() {
-            let goal = 10.0 * Vec3::X;
-            let step = Vec3::X;
-            let actual = next_step(Vec3::ZERO, goal, step);
+            let cases = &[(Vec3::X * 10.0, Vec3::X, Step::Continue(Vec3::X))];
+            cases.iter().for_each(|(goal, step, expected)| {
+                let actual = next_step(Vec3::ZERO, *goal, *step);
 
-            let expected = Step::Continue(step);
-
-            assert_eq!(actual, expected);
+                assert_eq!(actual, *expected);
+            });
         }
     }
 
