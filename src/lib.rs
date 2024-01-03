@@ -38,11 +38,11 @@ fn give_commands(
     }
 }
 
-trait Vec3Extension {
+pub trait Vec3Extension {
     fn to_vec2(&self) -> Vec2;
 }
 
-trait Vec2Extension {
+pub trait Vec2Extension {
     fn to_vec3(&self) -> Vec3;
 }
 

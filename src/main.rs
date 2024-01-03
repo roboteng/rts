@@ -2,13 +2,13 @@ use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
-use rts::{CoreLogicPlugin, MoveToCommand, SpawnVillager, SpawnVillagerData, Speed};
+use rts::{CoreLogicPlugin, MoveToCommand, SpawnVillager, SpawnVillagerData, Speed, Vec3Extension};
 
 fn main() {
     App::new()
         .add_plugins((DefaultPlugins, CoreLogicPlugin))
         .add_systems(Startup, setup)
-        .add_systems(Update, (create, move_unit))
+        .add_systems(Update, (create, move_unit, select_unit))
         .run();
 }
 
@@ -85,6 +85,39 @@ fn move_unit(
                 target: entity,
                 destination: point,
             })
+        }
+    }
+}
+
+fn select_unit(
+    camera_query: Query<(&Camera, &GlobalTransform)>,
+    windows: Query<&Window>,
+    clicks: Res<Input<MouseButton>>,
+    entities: Query<&Transform, With<Speed>>,
+    mut gizmos: Gizmos,
+) {
+    let (camera, camera_transform) = camera_query.single();
+
+    let Some(cursor_position) = windows.single().cursor_position() else {
+        return;
+    };
+
+    let Some(point) = camera.viewport_to_world_2d(camera_transform, cursor_position) else {
+        return;
+    };
+
+    if clicks.pressed(MouseButton::Right) {
+        for transform in entities.iter() {
+            let bl = transform.translation.to_vec2() - transform.scale.to_vec2() / 2.0;
+            let tr = transform.translation.to_vec2() + transform.scale.to_vec2() / 2.0;
+            if bl.x < point.x && point.x < tr.x && bl.y < point.y && point.y < tr.y {
+                gizmos.rect_2d(
+                    transform.translation.to_vec2(),
+                    0.0,
+                    transform.scale.to_vec2(),
+                    Color::WHITE,
+                );
+            }
         }
     }
 }
