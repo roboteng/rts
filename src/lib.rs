@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+const BASE_SPEED: f32 = 50.0;
+
 pub struct CoreLogicPlugin;
 impl Plugin for CoreLogicPlugin {
     fn build(&self, app: &mut App) {
@@ -135,14 +137,14 @@ pub struct SpawnVillagerData {
 impl SpawnVillagerData {
     fn to_bundle(&self) -> VillagerBundle {
         let transform = Transform {
-            translation: Vec3::new(self.pos.x, self.pos.y, 0.0),
+            translation: self.pos.to_vec3(),
             ..Default::default()
         };
 
         VillagerBundle {
             transform,
             commands: UnitCommandsComponent::default(),
-            speed: Speed(5.0),
+            speed: Speed(BASE_SPEED),
         }
     }
 }
@@ -194,6 +196,7 @@ mod test {
                 (Vec3::X * 10.0, 1.0, Step::Continue(Vec3::X)),
                 (Vec3::X, 1.0, Step::Stop(Vec3::X)),
                 (Vec3::X, 2.0, Step::Stop(Vec3::X)),
+                (Vec3::ZERO, 1.0, Step::Stop(Vec3::ZERO)),
             ];
             cases.iter().for_each(|(goal, step, expected)| {
                 let actual = next_step(Vec3::ZERO, *goal, *step);
@@ -271,7 +274,7 @@ mod test {
             let time = time.as_mut().unwrap();
             time.advance_by(Duration::from_millis(16));
             if time.elapsed() > Duration::from_secs(5) {
-                panic!("{}", message);
+                panic!("{message}");
             }
             app.update();
         }
