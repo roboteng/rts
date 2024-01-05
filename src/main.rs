@@ -8,7 +8,7 @@ fn main() {
     App::new()
         .add_plugins((DefaultPlugins, CoreLogicPlugin))
         .add_systems(Startup, setup)
-        .add_systems(Update, (create, move_unit, select_unit))
+        .add_systems(Update, (create, move_unit, select_unit, show_selected))
         .run();
 }
 
@@ -67,7 +67,7 @@ fn move_unit(
     windows: Query<&Window>,
     clicks: Res<Input<MouseButton>>,
     mut events: EventWriter<MoveToCommand>,
-    entities: Query<Entity, With<Speed>>,
+    entities: Query<Entity, With<Selected>>,
 ) {
     let (camera, camera_transform) = camera_query.single();
 
@@ -89,12 +89,15 @@ fn move_unit(
     }
 }
 
+#[derive(Component)]
+struct Selected;
+
 fn select_unit(
+    mut commands: Commands,
     camera_query: Query<(&Camera, &GlobalTransform)>,
     windows: Query<&Window>,
     clicks: Res<Input<MouseButton>>,
-    entities: Query<&Transform, With<Speed>>,
-    mut gizmos: Gizmos,
+    entities: Query<(&Transform, Entity), With<Speed>>,
 ) {
     let (camera, camera_transform) = camera_query.single();
 
@@ -107,17 +110,30 @@ fn select_unit(
     };
 
     if clicks.pressed(MouseButton::Right) {
-        for transform in entities.iter() {
+        let mut any_clicked = false;
+        for (transform, entity) in entities.iter() {
             let bl = transform.translation.to_vec2() - transform.scale.to_vec2() / 2.0;
             let tr = transform.translation.to_vec2() + transform.scale.to_vec2() / 2.0;
             if bl.x < point.x && point.x < tr.x && bl.y < point.y && point.y < tr.y {
-                gizmos.rect_2d(
-                    transform.translation.to_vec2(),
-                    0.0,
-                    transform.scale.to_vec2(),
-                    Color::WHITE,
-                );
+                commands.entity(entity).insert(Selected);
+                any_clicked = true;
             }
         }
+        if !any_clicked {
+            for (_, entity) in entities.iter() {
+                commands.entity(entity).remove::<Selected>();
+            }
+        }
+    }
+}
+
+fn show_selected(selctions: Query<&Transform, With<Selected>>, mut gizmos: Gizmos) {
+    for selection in selctions.iter() {
+        gizmos.rect_2d(
+            selection.translation.to_vec2(),
+            0.0,
+            selection.scale.to_vec2(),
+            Color::WHITE,
+        );
     }
 }
