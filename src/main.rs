@@ -69,17 +69,11 @@ fn move_unit(
     mut events: EventWriter<MoveToCommand>,
     entities: Query<Entity, With<Selected>>,
 ) {
-    let (camera, camera_transform) = camera_query.single();
+    if clicks.just_pressed(MouseButton::Right) {
+        let Some(point) = find_pointer_position(camera_query, windows) else {
+            return;
+        };
 
-    let Some(cursor_position) = windows.single().cursor_position() else {
-        return;
-    };
-
-    let Some(point) = camera.viewport_to_world_2d(camera_transform, cursor_position) else {
-        return;
-    };
-
-    if clicks.just_pressed(MouseButton::Left) {
         if let Some(entity) = entities.iter().next() {
             events.send(MoveToCommand {
                 target: entity,
@@ -92,6 +86,17 @@ fn move_unit(
 #[derive(Component)]
 struct Selected;
 
+fn find_pointer_position(
+    camera_query: Query<(&Camera, &GlobalTransform)>,
+    windows: Query<&Window>,
+) -> Option<Vec2> {
+    let (camera, camera_transform) = camera_query.iter().next()?;
+
+    let cursor_position = windows.single().cursor_position()?;
+
+    camera.viewport_to_world_2d(camera_transform, cursor_position)
+}
+
 fn select_unit(
     mut commands: Commands,
     camera_query: Query<(&Camera, &GlobalTransform)>,
@@ -99,17 +104,11 @@ fn select_unit(
     clicks: Res<Input<MouseButton>>,
     entities: Query<(&Transform, Entity), With<Speed>>,
 ) {
-    let (camera, camera_transform) = camera_query.single();
-
-    let Some(cursor_position) = windows.single().cursor_position() else {
+    let Some(point) = find_pointer_position(camera_query, windows) else {
         return;
     };
 
-    let Some(point) = camera.viewport_to_world_2d(camera_transform, cursor_position) else {
-        return;
-    };
-
-    if clicks.pressed(MouseButton::Right) {
+    if clicks.pressed(MouseButton::Left) {
         let mut any_clicked = false;
         for (transform, entity) in entities.iter() {
             let bl = transform.translation.to_vec2() - transform.scale.to_vec2() / 2.0;
