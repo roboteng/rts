@@ -2,6 +2,9 @@ use bevy::prelude::*;
 
 const BASE_SPEED: f32 = 50.0;
 
+pub mod human_input;
+pub mod visuals;
+
 pub struct CoreLogicPlugin;
 impl Plugin for CoreLogicPlugin {
     fn build(&self, app: &mut App) {
@@ -37,6 +40,9 @@ fn give_commands(
         }
     }
 }
+
+#[derive(Component)]
+pub struct Selected;
 
 pub trait Vec3Extension {
     fn to_vec2(&self) -> Vec2;
