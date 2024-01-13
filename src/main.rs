@@ -1,8 +1,5 @@
 use bevy::prelude::*;
-use rts::{
-    human_input::HumanInputPlugin, visuals::VisualsPlugin, CoreLogicPlugin, SpawnUnit,
-    SpawnUnitData,
-};
+use rts::{core_logic::*, human_input::HumanInputPlugin, visuals::VisualsPlugin};
 
 fn main() {
     App::new()

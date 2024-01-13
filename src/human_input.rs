@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{core_logic::*, *};
 
 pub struct HumanInputPlugin;
 impl Plugin for HumanInputPlugin {

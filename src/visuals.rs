@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{core_logic::*, *};
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 
 pub struct VisualsPlugin;
