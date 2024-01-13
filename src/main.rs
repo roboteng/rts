@@ -1,15 +1,17 @@
-use bevy::{
-    prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
-};
-use rts::{CoreLogicPlugin, MoveToCommand, SpawnUnit, SpawnUnitData, Speed, Vec3Extension};
+use bevy::prelude::*;
+use human_input::HumanInputPlugin;
+use rts::{CoreLogicPlugin, SpawnUnit, SpawnUnitData};
 use visuals::VisualsPlugin;
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, CoreLogicPlugin, VisualsPlugin))
+        .add_plugins((
+            DefaultPlugins,
+            CoreLogicPlugin,
+            VisualsPlugin,
+            HumanInputPlugin,
+        ))
         .add_systems(Startup, setup)
-        .add_systems(Update, (move_unit, select_unit, show_selected))
         .run();
 }
 
@@ -20,10 +22,13 @@ mod visuals {
     };
     use rts::*;
 
+    use crate::Selected;
+
     pub struct VisualsPlugin;
     impl Plugin for VisualsPlugin {
         fn build(&self, app: &mut App) {
-            app.add_systems(Startup, setup).add_systems(Update, create);
+            app.add_systems(Startup, setup)
+                .add_systems(Update, (create, show_selected));
         }
     }
 
@@ -68,6 +73,17 @@ mod visuals {
             }
         }
     }
+
+    fn show_selected(selctions: Query<&Transform, With<Selected>>, mut gizmos: Gizmos) {
+        for selection in selctions.iter() {
+            gizmos.rect_2d(
+                selection.translation.to_vec2(),
+                0.0,
+                selection.scale.to_vec2(),
+                Color::WHITE,
+            );
+        }
+    }
 }
 
 fn setup(mut s: EventWriter<SpawnUnit>, mut commands: Commands) {
@@ -80,77 +96,79 @@ fn setup(mut s: EventWriter<SpawnUnit>, mut commands: Commands) {
     });
 }
 
-fn move_unit(
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-    windows: Query<&Window>,
-    clicks: Res<Input<MouseButton>>,
-    mut events: EventWriter<MoveToCommand>,
-    entities: Query<Entity, With<Selected>>,
-) {
-    if clicks.just_pressed(MouseButton::Right) {
+mod human_input {
+    use crate::Selected;
+    use bevy::prelude::*;
+    use rts::*;
+
+    pub struct HumanInputPlugin;
+    impl Plugin for HumanInputPlugin {
+        fn build(&self, app: &mut App) {
+            app.add_systems(Update, (move_unit, select_unit));
+        }
+    }
+
+    fn find_pointer_position(
+        camera_query: Query<(&Camera, &GlobalTransform)>,
+        windows: Query<&Window>,
+    ) -> Option<Vec2> {
+        let (camera, camera_transform) = camera_query.iter().next()?;
+
+        let cursor_position = windows.single().cursor_position()?;
+
+        camera.viewport_to_world_2d(camera_transform, cursor_position)
+    }
+
+    fn move_unit(
+        camera_query: Query<(&Camera, &GlobalTransform)>,
+        windows: Query<&Window>,
+        clicks: Res<Input<MouseButton>>,
+        mut events: EventWriter<MoveToCommand>,
+        entities: Query<Entity, With<Selected>>,
+    ) {
+        if clicks.just_pressed(MouseButton::Right) {
+            let Some(point) = find_pointer_position(camera_query, windows) else {
+                return;
+            };
+
+            if let Some(entity) = entities.iter().next() {
+                events.send(MoveToCommand {
+                    target: entity,
+                    destination: point,
+                })
+            }
+        }
+    }
+
+    fn select_unit(
+        mut commands: Commands,
+        camera_query: Query<(&Camera, &GlobalTransform)>,
+        windows: Query<&Window>,
+        clicks: Res<Input<MouseButton>>,
+        entities: Query<(&Transform, Entity), With<Speed>>,
+    ) {
         let Some(point) = find_pointer_position(camera_query, windows) else {
             return;
         };
 
-        if let Some(entity) = entities.iter().next() {
-            events.send(MoveToCommand {
-                target: entity,
-                destination: point,
-            })
+        if clicks.pressed(MouseButton::Left) {
+            let mut any_clicked = false;
+            for (transform, entity) in entities.iter() {
+                let bl = transform.translation.to_vec2() - transform.scale.to_vec2() / 2.0;
+                let tr = transform.translation.to_vec2() + transform.scale.to_vec2() / 2.0;
+                if bl.x < point.x && point.x < tr.x && bl.y < point.y && point.y < tr.y {
+                    commands.entity(entity).insert(Selected);
+                    any_clicked = true;
+                }
+            }
+            if !any_clicked {
+                for (_, entity) in entities.iter() {
+                    commands.entity(entity).remove::<Selected>();
+                }
+            }
         }
     }
 }
 
 #[derive(Component)]
 struct Selected;
-
-fn find_pointer_position(
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-    windows: Query<&Window>,
-) -> Option<Vec2> {
-    let (camera, camera_transform) = camera_query.iter().next()?;
-
-    let cursor_position = windows.single().cursor_position()?;
-
-    camera.viewport_to_world_2d(camera_transform, cursor_position)
-}
-
-fn select_unit(
-    mut commands: Commands,
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-    windows: Query<&Window>,
-    clicks: Res<Input<MouseButton>>,
-    entities: Query<(&Transform, Entity), With<Speed>>,
-) {
-    let Some(point) = find_pointer_position(camera_query, windows) else {
-        return;
-    };
-
-    if clicks.pressed(MouseButton::Left) {
-        let mut any_clicked = false;
-        for (transform, entity) in entities.iter() {
-            let bl = transform.translation.to_vec2() - transform.scale.to_vec2() / 2.0;
-            let tr = transform.translation.to_vec2() + transform.scale.to_vec2() / 2.0;
-            if bl.x < point.x && point.x < tr.x && bl.y < point.y && point.y < tr.y {
-                commands.entity(entity).insert(Selected);
-                any_clicked = true;
-            }
-        }
-        if !any_clicked {
-            for (_, entity) in entities.iter() {
-                commands.entity(entity).remove::<Selected>();
-            }
-        }
-    }
-}
-
-fn show_selected(selctions: Query<&Transform, With<Selected>>, mut gizmos: Gizmos) {
-    for selection in selctions.iter() {
-        gizmos.rect_2d(
-            selection.translation.to_vec2(),
-            0.0,
-            selection.scale.to_vec2(),
-            Color::WHITE,
-        );
-    }
-}
