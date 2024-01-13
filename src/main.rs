@@ -2,7 +2,7 @@ use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
-use rts::{CoreLogicPlugin, MoveToCommand, SpawnVillager, SpawnVillagerData, Speed, Vec3Extension};
+use rts::{CoreLogicPlugin, MoveToCommand, SpawnUnit, SpawnUnitData, Speed, Vec3Extension};
 
 fn main() {
     App::new()
@@ -12,11 +12,11 @@ fn main() {
         .run();
 }
 
-fn setup(mut s: EventWriter<SpawnVillager>, mut commands: Commands) {
+fn setup(mut s: EventWriter<SpawnUnit>, mut commands: Commands) {
     let entity = commands.spawn_empty().id();
-    s.send(SpawnVillager {
+    s.send(SpawnUnit {
         target: entity,
-        data: SpawnVillagerData {
+        data: SpawnUnitData {
             pos: Vec2::new(0.0, 0.0),
         },
     });
@@ -27,7 +27,7 @@ fn setup(mut s: EventWriter<SpawnVillager>, mut commands: Commands) {
 }
 
 fn create(
-    mut events: EventReader<SpawnVillager>,
+    mut events: EventReader<SpawnUnit>,
     transforms: Query<&Transform>,
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,

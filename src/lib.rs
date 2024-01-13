@@ -5,15 +5,15 @@ const BASE_SPEED: f32 = 50.0;
 pub struct CoreLogicPlugin;
 impl Plugin for CoreLogicPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<SpawnVillager>();
+        app.add_event::<SpawnUnit>();
         app.add_event::<MoveToCommand>();
 
-        app.add_systems(PreUpdate, spawn_villagers);
+        app.add_systems(PreUpdate, spawn_units);
         app.add_systems(Update, (give_commands, move_units));
     }
 }
 
-fn spawn_villagers(mut creations: EventReader<SpawnVillager>, mut commands: Commands) {
+fn spawn_units(mut creations: EventReader<SpawnUnit>, mut commands: Commands) {
     for spawn in creations.read() {
         let bundle = spawn.data.to_bundle();
         commands.entity(spawn.target).insert(bundle);
@@ -104,7 +104,7 @@ fn move_units(mut q: Query<(&mut UnitCommandsComponent, &mut Transform, &Speed)>
 }
 
 #[derive(Bundle)]
-struct VillagerBundle {
+struct UnitBundle {
     transform: Transform,
     commands: UnitCommandsComponent,
     speed: Speed,
@@ -124,24 +124,24 @@ enum UnitCommand {
 pub struct Speed(f32);
 
 #[derive(Debug, Event)]
-pub struct SpawnVillager {
+pub struct SpawnUnit {
     pub target: Entity,
-    pub data: SpawnVillagerData,
+    pub data: SpawnUnitData,
 }
 
 #[derive(Debug)]
-pub struct SpawnVillagerData {
+pub struct SpawnUnitData {
     pub pos: Vec2,
 }
 
-impl SpawnVillagerData {
-    fn to_bundle(&self) -> VillagerBundle {
+impl SpawnUnitData {
+    fn to_bundle(&self) -> UnitBundle {
         let transform = Transform {
             translation: self.pos.to_vec3(),
             ..Default::default()
         };
 
-        VillagerBundle {
+        UnitBundle {
             transform,
             commands: UnitCommandsComponent::default(),
             speed: Speed(BASE_SPEED),
@@ -172,7 +172,7 @@ mod test {
 
         #[test]
         fn transform_gets_created() {
-            let actual = &SpawnVillagerData {
+            let actual = &SpawnUnitData {
                 pos: Vec2 { x: 3.0, y: 4.0 },
             }
             .to_bundle();
@@ -182,7 +182,7 @@ mod test {
 
         #[test]
         fn user_commands_get_created() {
-            let actual = &SpawnVillagerData {
+            let actual = &SpawnUnitData {
                 pos: Vec2::default(),
             }
             .to_bundle();
@@ -222,7 +222,7 @@ mod test {
         use super::*;
 
         #[test]
-        fn move_a_villager() {
+        fn move_a_unit() {
             // arrange
             let mut app = App::new();
 
@@ -231,9 +231,9 @@ mod test {
             let ent = app.world.spawn_empty().id();
 
             let init_pos = Vec2::new(1.0, 1.0);
-            app.world.send_event(SpawnVillager {
+            app.world.send_event(SpawnUnit {
                 target: ent,
-                data: SpawnVillagerData { pos: init_pos },
+                data: SpawnUnitData { pos: init_pos },
             });
 
             // act
@@ -250,7 +250,7 @@ mod test {
                         false
                     }
                 },
-                "Villager didn't move closer to the goal",
+                "Unit didn't move closer to the goal",
             );
         }
 
