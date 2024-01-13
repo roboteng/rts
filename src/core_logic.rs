@@ -4,10 +4,12 @@ pub struct CoreLogicPlugin;
 impl Plugin for CoreLogicPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnUnit>();
+        app.add_event::<SelectEvent>();
+        app.add_event::<UnselectEvent>();
         app.add_event::<MoveToCommand>();
 
         app.add_systems(PreUpdate, spawn_units);
-        app.add_systems(Update, (give_commands, move_units));
+        app.add_systems(Update, (give_commands, move_units, make_selections));
     }
 }
 
@@ -36,8 +38,32 @@ fn give_commands(
     }
 }
 
+#[derive(Event)]
+pub struct SelectEvent {
+    target: Entity,
+}
+
+impl From<Entity> for SelectEvent {
+    fn from(value: Entity) -> Self {
+        Self { target: value }
+    }
+}
+
+#[derive(Event)]
+pub enum UnselectEvent {
+    All,
+}
+
 #[derive(Component)]
 pub struct Selected;
+
+fn make_selections(mut selections: EventReader<SelectEvent>, mut commands: Commands) {
+    for event in selections.read() {
+        commands.get_entity(event.target).map(|mut e| {
+            e.insert(Selected);
+        });
+    }
+}
 
 pub trait Vec3Extension {
     fn to_vec2(&self) -> Vec2;

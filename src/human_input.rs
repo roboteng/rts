@@ -40,11 +40,12 @@ fn move_unit(
 }
 
 fn select_unit(
-    mut commands: Commands,
     camera_query: Query<(&Camera, &GlobalTransform)>,
     windows: Query<&Window>,
     clicks: Res<Input<MouseButton>>,
     entities: Query<(&Transform, Entity), With<Speed>>,
+    mut selections: EventWriter<SelectEvent>,
+    mut unselections: EventWriter<UnselectEvent>,
 ) {
     let Some(point) = find_pointer_position(camera_query, windows) else {
         return;
@@ -56,14 +57,12 @@ fn select_unit(
             let bl = transform.translation.to_vec2() - transform.scale.to_vec2() / 2.0;
             let tr = transform.translation.to_vec2() + transform.scale.to_vec2() / 2.0;
             if bl.x < point.x && point.x < tr.x && bl.y < point.y && point.y < tr.y {
-                commands.entity(entity).insert(Selected);
+                selections.send(entity.into());
                 any_clicked = true;
             }
         }
         if !any_clicked {
-            for (_, entity) in entities.iter() {
-                commands.entity(entity).remove::<Selected>();
-            }
+            unselections.send(UnselectEvent::All);
         }
     }
 }
