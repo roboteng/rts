@@ -9,7 +9,15 @@ impl Plugin for CoreLogicPlugin {
         app.add_event::<MoveToCommand>();
 
         app.add_systems(PreUpdate, spawn_units);
-        app.add_systems(Update, (give_commands, move_units, make_selections));
+        app.add_systems(
+            Update,
+            (
+                give_commands,
+                move_units,
+                make_selections,
+                make_unselections,
+            ),
+        );
     }
 }
 
@@ -62,6 +70,24 @@ fn make_selections(mut selections: EventReader<SelectEvent>, mut commands: Comma
         commands.get_entity(event.target).map(|mut e| {
             e.insert(Selected);
         });
+    }
+}
+
+fn make_unselections(
+    mut unselections: EventReader<UnselectEvent>,
+    mut commands: Commands,
+    entites: Query<Entity, With<Selected>>,
+) {
+    for unselection in unselections.read() {
+        match unselection {
+            UnselectEvent::All => {
+                for entity in entites.iter() {
+                    commands.get_entity(entity).map(|mut e| {
+                        e.remove::<Selected>();
+                    });
+                }
+            }
+        }
     }
 }
 
