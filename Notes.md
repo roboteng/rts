@@ -209,3 +209,23 @@ fn sample_test() {
     assert_aq(actual, OutputEvent::new());
 }
 ```
+
+## Multiple Players
+
+How can we implement multiple players? I see a couple different ways:
+
+- Each player has a specific ID, like an int or string
+- Each player has their own type, like a struct
+- Each Player has their own vairant of an enum
+
+Events, like creating a unit, should probably contain the player that they were made by.
+
+### Questions
+
+Is it every possible for player A to command player B's units?
+
+- If this is the case, we should be able to make an eventt just for that, and not all events should consider this as a possibility
+
+Multiple players should be able to select the same unit. Does our implemention take that into account?
+
+Is there a way to prevent AI's or compromised client to command other player's units?
